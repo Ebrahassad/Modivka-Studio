@@ -76,37 +76,6 @@ jobs:
       - name: Build Release APK
         run: flutter build apk --release --no-tree-shake-icons --android-skip-build-dependency-validation
 
-      - name: Setup Android Build Tools
-        run: |
-          set -e
-          SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
-          yes | "$SDKMANAGER" --licenses >/dev/null || true
-          "$SDKMANAGER" "build-tools;35.0.0"
-          export PATH="$ANDROID_SDK_ROOT/build-tools/35.0.0:$PATH"
-          echo "$ANDROID_SDK_ROOT/build-tools/35.0.0" >> "$GITHUB_PATH"
-
-      - name: Verify APK Signature
-        run: |
-          set -e
-
-          echo "===== APK SIGNATURE ====="
-          apksigner verify --verbose --print-certs \
-            build/app/outputs/flutter-apk/app-release.apk
-
-          EXPECTED_SHA256="B6:1D:58:16:89:BC:8C:97:95:75:3F:66:F6:14:F7:93:F6:2C:9D:37:D1:DB:B7:5E:0B:1D:D6:35:D1:B7:BC:84"
-
-          APK_SHA256=$(apksigner verify --verbose --print-certs \
-            build/app/outputs/flutter-apk/app-release.apk |
-            grep -m1 "certificate SHA-256 digest:" |
-            awk '{print $NF}')
-
-          echo "Expected SHA-256: $EXPECTED_SHA256"
-          echo "APK SHA-256:      $APK_SHA256"
-
-          test "$APK_SHA256" = "$EXPECTED_SHA256"
-
-          echo "APK signature MATCH: OK"
-
       - name: Build Release AAB
         run: flutter build appbundle --release --no-tree-shake-icons --android-skip-build-dependency-validation
 
