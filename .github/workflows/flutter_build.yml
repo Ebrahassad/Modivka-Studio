@@ -37,29 +37,66 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           set -e
-          mkdir -p android/key
-
-          echo "$KEYSTORE_BASE64" | base64 --decode > android/key/watermark-pro-release.jks
+          mkdir -p android/app/key
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/key/watermark-pro-release.jks
 
           cat > android/key.properties <<EOT
           storePassword=$KEYSTORE_PASSWORD
           keyPassword=$KEY_PASSWORD
           keyAlias=$KEY_ALIAS
-          storeFile=key/watermark-pro-release.jks
+          storeFile=app/key/watermark-pro-release.jks
           EOT
 
-          chmod 600 android/key/watermark-pro-release.jks
+          chmod 600 android/app/key/watermark-pro-release.jks
           chmod 600 android/key.properties
 
-      - name: Verify Release Signing
+      - name: Verify Keystore Certificate
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
           set -e
-          test -s android/key/watermark-pro-release.jks
-          test -s android/key.properties
-          grep -E '^keyAlias=|^storeFile=' android/key.properties
+
+          EXPECTED_SHA256="B6:1D:58:16:89:BC:8C:97:95:75:3F:66:F6:14:F7:93:F6:2C:9D:37:D1:DB:B7:5E:0B:1D:D6:35:D1:B7:BC:84"
+
+          ACTUAL_SHA256=$(keytool -list -v \
+            -keystore android/app/key/watermark-pro-release.jks \
+            -alias "$KEY_ALIAS" \
+            -storepass "$KEYSTORE_PASSWORD" |
+            grep -m1 "SHA256:" |
+            sed 's/.*SHA256: //')
+
+          echo "Expected SHA-256: $EXPECTED_SHA256"
+          echo "Actual SHA-256:   $ACTUAL_SHA256"
+
+          test "$ACTUAL_SHA256" = "$EXPECTED_SHA256"
+
+          echo "Keystore certificate MATCH: OK"
 
       - name: Build Release APK
         run: flutter build apk --release --no-tree-shake-icons --android-skip-build-dependency-validation
+
+      - name: Verify APK Signature
+        run: |
+          set -e
+
+          echo "===== APK SIGNATURE ====="
+          apksigner verify --verbose --print-certs \
+            build/app/outputs/flutter-apk/app-release.apk
+
+          EXPECTED_SHA256="B6:1D:58:16:89:BC:8C:97:95:75:3F:66:F6:14:F7:93:F6:2C:9D:37:D1:DB:B7:5E:0B:1D:D6:35:D1:B7:BC:84"
+
+          APK_SHA256=$(apksigner verify --verbose --print-certs \
+            build/app/outputs/flutter-apk/app-release.apk |
+            grep -m1 "certificate SHA-256 digest:" |
+            awk '{print $NF}')
+
+          echo "Expected SHA-256: $EXPECTED_SHA256"
+          echo "APK SHA-256:      $APK_SHA256"
+
+          test "$APK_SHA256" = "$EXPECTED_SHA256"
+
+          echo "APK signature MATCH: OK"
 
       - name: Build Release AAB
         run: flutter build appbundle --release --no-tree-shake-icons --android-skip-build-dependency-validation
@@ -68,7 +105,7 @@ jobs:
         if: always()
         run: |
           rm -f android/key.properties
-          rm -f android/key/watermark-pro-release.jks
+          rm -f android/app/key/watermark-pro-release.jks
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
