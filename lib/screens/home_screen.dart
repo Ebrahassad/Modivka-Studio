@@ -333,6 +333,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   final files =
                       _lastProcessedPaths.map((path) => XFile(path)).toList();
 
+                  AdsService.showInterstitial();
+
                   await Share.shareXFiles(
                     files,
                     text: quoteController.text.trim().isNotEmpty
@@ -457,6 +459,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     if (mounted && successCount > 0) {
+      AdsService.showRewarded();
       _showSavedDialog(successCount, lastSavedPath);
     }
   }
@@ -1157,9 +1160,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: UnityBannerAd(
             placementId: AdsService.bannerPlacementId,
             onLoad: (placementId) {},
-            onFailed: (placementId, error, message) {
-              AdsService.bannerAvailable.value = false;
-            },
+            onFailed: (placementId, error, message) {},
           ),
         );
       },

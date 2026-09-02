@@ -76,23 +76,8 @@ jobs:
       - name: Build Release APK
         run: flutter build apk --release --no-tree-shake-icons --android-skip-build-dependency-validation
 
-      - name: Build Release AAB
-        run: flutter build appbundle --release --no-tree-shake-icons --android-skip-build-dependency-validation
-
-      - name: Remove Signing Files
-        if: always()
-        run: |
-          rm -f android/key.properties
-          rm -f android/app/key/watermark-pro-release.jks
-
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
         with:
           name: watermark-pro-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
-
-      - name: Upload Release AAB
-        uses: actions/upload-artifact@v4
-        with:
-          name: watermark-pro-release-aab
-          path: build/app/outputs/bundle/release/app-release.aab
