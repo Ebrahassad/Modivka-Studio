@@ -32,7 +32,7 @@ class WatermarkConfig {
     this.rotation = 0.0,
     this.opacity = 1.0,
     this.tileSpacing = 120,
-    this.removeLogoBg = false,
+    this.removeLogoBg = true,
   });
 
   WatermarkConfig copyWith({

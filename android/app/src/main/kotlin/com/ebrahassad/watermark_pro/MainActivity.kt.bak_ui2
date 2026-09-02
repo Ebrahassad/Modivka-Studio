@@ -85,46 +85,90 @@ class MainActivity : FlutterActivity() {
 
     private fun openFolderPreciseLocation(folder: File): Boolean {
         return try {
-            val externalRoot = Environment.getExternalStorageDirectory().absolutePath
+            val externalRoot =
+                Environment.getExternalStorageDirectory().absolutePath
+
             val folderPath = folder.absolutePath
-            if (!folderPath.startsWith(externalRoot)) return false
+
+            if (!folderPath.startsWith(externalRoot)) {
+                return false
+            }
 
             var relative = folderPath.removePrefix(externalRoot)
-            if (relative.startsWith("/")) relative = relative.substring(1)
 
-            val docId = if (relative.isEmpty()) "primary:" else "primary:$relative"
+            if (relative.startsWith("/")) {
+                relative = relative.substring(1)
+            }
+
+            val docId =
+                if (relative.isEmpty()) {
+                    "primary:"
+                } else {
+                    "primary:$relative"
+                }
+
             val uri = DocumentsContract.buildDocumentUri(
                 "com.android.externalstorage.documents",
                 docId
             )
 
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, "vnd.android.document/directory")
-                addFlags(
-                    Intent.FLAG_ACTIVITY_NEW_TASK or
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
+            val intents = listOf(
+                Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(
+                        uri,
+                        "vnd.android.document/directory"
+                    )
+                    addFlags(
+                        Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    )
+                },
+                Intent(Intent.ACTION_VIEW).apply {
+                    data = uri
+                    addFlags(
+                        Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                            Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    )
+                }
+            )
+
+            for (intent in intents) {
+                try {
+                    if (intent.resolveActivity(packageManager) != null) {
+                        startActivity(intent)
+                        return true
+                    }
+                } catch (_: Exception) {
+                }
             }
 
-            startActivity(intent)
-            true
-        } catch (e: Exception) {
+            false
+        } catch (_: Exception) {
             false
         }
     }
 
     private fun openFolderLegacyFallback(folder: File): Boolean {
         return try {
+            val uri = Uri.fromFile(folder)
+
             val intent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(
-                    Uri.fromFile(folder),
+                    uri,
                     "resource/folder"
                 )
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-            startActivity(intent)
-            true
-        } catch (e: Exception) {
+
+            if (intent.resolveActivity(packageManager) != null) {
+                startActivity(intent)
+                true
+            } else {
+                false
+            }
+        } catch (_: Exception) {
             false
         }
     }

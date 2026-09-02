@@ -581,16 +581,15 @@ class _HomeScreenState extends State<HomeScreen> {
                               }) {
                                 return Expanded(
                                   child: Material(
-                                    color: color,
+                                    color: Colors.white.withAlpha(235),
                                     borderRadius: BorderRadius.circular(13),
-                                    elevation: 4,
-                                    shadowColor: color.withAlpha(90),
+                                    elevation: 2,
                                     child: InkWell(
                                       borderRadius: BorderRadius.circular(13),
                                       onTap: onTap,
                                       child: Padding(
                                         padding: EdgeInsets.symmetric(
-                                          vertical: compact ? 9 : 11,
+                                          vertical: compact ? 8 : 10,
                                           horizontal: compact ? 3 : 6,
                                         ),
                                         child: Row(
@@ -600,8 +599,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                             if (!textOnly) ...[
                                               Icon(
                                                 icon,
-                                                color: Colors.white,
-                                                size: compact ? 18 : 21,
+                                                color: color,
+                                                size: compact ? 17 : 20,
                                               ),
                                               SizedBox(width: compact ? 3 : 6),
                                             ],
@@ -612,9 +611,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 overflow: TextOverflow.ellipsis,
                                                 textAlign: TextAlign.center,
                                                 style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: compact ? 12 : 13.5,
-                                                  fontWeight: FontWeight.w800,
+                                                  color:
+                                                      const Color(0xFF263238),
+                                                  fontSize: compact ? 10 : 11.5,
+                                                  fontWeight: FontWeight.w700,
                                                 ),
                                               ),
                                             ),
@@ -958,37 +958,45 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                _uiSwitchRow(
-                                  icon: Icons.auto_fix_high_rounded,
-                                  title: AppStrings.get(
-                                    context,
-                                    'removeLogoBg',
-                                  ),
-                                  value: _globalConfig.removeLogoBg,
-                                  color: accent,
-                                  textColor: textColor,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _globalConfig.removeLogoBg = value;
-                                    });
-                                    _generateLogoPreview();
-                                  },
-                                ),
-                                const SizedBox(height: 8),
-                                _uiSwitchRow(
-                                  icon: Icons.select_all_rounded,
-                                  title: AppStrings.get(
-                                    context,
-                                    'applyToAllTitle',
-                                  ),
-                                  value: _applyToAll,
-                                  color: primary,
-                                  textColor: textColor,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _applyToAll = value;
-                                    });
-                                  },
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _uiSwitchRow(
+                                        icon: Icons.select_all_rounded,
+                                        title: AppStrings.get(
+                                          context,
+                                          'applyToAllTitle',
+                                        ),
+                                        value: _applyToAll,
+                                        color: primary,
+                                        textColor: textColor,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _applyToAll = value;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: _uiSwitchRow(
+                                        icon: Icons.auto_fix_high_rounded,
+                                        title: AppStrings.get(
+                                          context,
+                                          'removeLogoBg',
+                                        ),
+                                        value: _globalConfig.removeLogoBg,
+                                        color: accent,
+                                        textColor: textColor,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _globalConfig.removeLogoBg = value;
+                                          });
+                                          _generateLogoPreview();
+                                        },
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: 5),
                                 Row(
