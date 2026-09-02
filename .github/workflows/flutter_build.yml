@@ -44,7 +44,7 @@ jobs:
           storePassword=$KEYSTORE_PASSWORD
           keyPassword=$KEY_PASSWORD
           keyAlias=$KEY_ALIAS
-          storeFile=app/key/watermark-pro-release.jks
+          storeFile=key/watermark-pro-release.jks
           EOT
 
           chmod 600 android/app/key/watermark-pro-release.jks
