@@ -76,6 +76,15 @@ jobs:
       - name: Build Release APK
         run: flutter build apk --release --no-tree-shake-icons --android-skip-build-dependency-validation
 
+      - name: Setup Android Build Tools
+        run: |
+          set -e
+          SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "build-tools;35.0.0"
+          export PATH="$ANDROID_SDK_ROOT/build-tools/35.0.0:$PATH"
+          echo "$ANDROID_SDK_ROOT/build-tools/35.0.0" >> "$GITHUB_PATH"
+
       - name: Verify APK Signature
         run: |
           set -e
