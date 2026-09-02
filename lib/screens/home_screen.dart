@@ -518,8 +518,8 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               title: Text(
                 AppStrings.get(context, 'appTitle'),
-                style: const TextStyle(
-                  color: Color(0xFF263238),
+                style: TextStyle(
+                  color: textColor,
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
                 ),
