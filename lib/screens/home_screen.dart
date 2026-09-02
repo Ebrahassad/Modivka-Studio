@@ -7,6 +7,9 @@ import '../models/watermark_config.dart';
 import '../providers/locale_provider.dart';
 import '../services/watermark_service.dart';
 import '../utils/app_strings.dart';
+import '../services/ads_service.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:unity_ads_plugin/unity_ads_plugin.dart';
 
 class IndividualConfig {
   double xRatio;
@@ -381,7 +384,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(13),
                 ),
               ),
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                Navigator.pop(context);
+                AdsService.showInterstitial();
+              },
               icon: const Icon(
                 Icons.check_rounded,
                 size: 19,
@@ -972,6 +978,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                       _globalConfig.removeLogoBg = value;
                                     });
                                     _generateLogoPreview();
+
+                                    if (value) {
+                                      AdsService.showRewarded();
+                                    }
                                   },
                                 ),
                                 const SizedBox(height: 8),
@@ -1119,9 +1129,37 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
+                  _buildBannerAd(),
                 ],
               ),
             ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBannerAd() {
+    if (kIsWeb) return const SizedBox.shrink();
+    try {
+      if (!(Platform.isAndroid || Platform.isIOS)) {
+        return const SizedBox.shrink();
+      }
+    } catch (_) {
+      return const SizedBox.shrink();
+    }
+    return ValueListenableBuilder<bool>(
+      valueListenable: AdsService.bannerAvailable,
+      builder: (context, available, _) {
+        if (!available) return const SizedBox.shrink();
+        return SizedBox(
+          height: 50,
+          child: UnityBannerAd(
+            placementId: AdsService.bannerPlacementId,
+            onLoad: (placementId) {},
+            onFailed: (placementId, error, message) {
+              AdsService.bannerAvailable.value = false;
+            },
           ),
         );
       },
