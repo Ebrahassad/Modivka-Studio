@@ -18,16 +18,17 @@ class AppStrings {
       'exit': 'خروج',
       'shareQuoteLabel': 'اكتب اقتباس أو نص ترويجي للمشاركة على صفحات التواصل:',
       'shareQuoteHint': 'مثال: وصل حديثاً تشكيلة مميزة..',
+      'quoteHint': 'اكتب اقتباساً للمشاركة',
       'processedByApp': 'تمت معالجة الصور بواسطة Watermark Pro',
       'exitTooltip': 'خروج',
       'settingsTooltip': 'الإعدادات',
-      'enlargeLogo': 'تكبير الشعار',
-      'rotateLogo': 'تدوير الشعار',
-      'logoOpacity': 'شفافية الشعار',
+      'enlargeLogo': 'تكبير',
+      'rotateLogo': 'تدوير',
+      'logoOpacity': 'شفافية',
       'savingExporting': 'جاري الحفظ والتصدير {current}/{total}',
       'noImages': 'لا توجد صور',
       'selectedImage': 'الصورة {current} من {total}',
-      'dragLogoHint': 'اسحب الشعار لتغيير مكانه وحجمه',
+      'dragLogoHint': 'اسحب الشعار لتحريكه',
       'toolsTitle': 'أدوات التعديل',
       'applyToAllTitle': 'تطبيق على الكل',
       'applyToAllOn': 'التعديلات تُطبق على كل الصور',
@@ -41,18 +42,11 @@ class AppStrings {
       'gradientColor': 'التدرج',
       'selectedColor': 'اللون المحدد: {color}',
       'language': 'اللغة',
-      'currentArabic': 'Current Language: Arabic',
+      'currentArabic': 'اللغة الحالية: العربية',
       'currentEnglish': 'Current Language: English',
       'changeLanguage': 'تغيير اللغة',
       'aboutTitle': 'حول التطبيق',
-      'aboutDescription':
-          'واترمارك هو تطبيق متخصص لإضافة العلامات المائية والشعارات التجارية إلى مجموعة من الصور دفعة واحدة من وحدة التخزين.\n\n'
-              'أهم وظائف التطبيق:\n'
-              '1. اختيار عدة صور من الجهاز دفعة واحدة.\n'
-              '2. اختيار شعار أو لوقو من الجهاز.\n'
-              '3. إزالة خلفية الشعار تلقائياً عند تفعيل الخيار.\n'
-              '4. التحكم في مكان وحجم وشفافية الشعار.\n'
-              '5. تطبيق الإعدادات وحفظ الصور الناتجة بسرعة.',
+      'aboutDescription': 'Watermark Pro هو تطبيق متخصص لإضافة العلامات المائية والشعارات التجارية إلى مجموعة من الصور دفعة واحدة من وحدة التخزين.\n\nأهم وظائف التطبيق:\n1. اختيار عدة صور من الجهاز دفعة واحدة.\n2. اختيار شعار أو لوقو من الجهاز.\n3. دعم صيغ صور الشعار JPG وJPEG وPNG وWEBP. ويُفضّل استخدام PNG أو WEBP للشعارات ذات الخلفية الشفافة.\n4. إزالة خلفية الشعار تلقائياً عند تفعيل الخيار.\n5. التحكم في مكان وحجم وشفافية الشعار.\n6. تطبيق الإعدادات وحفظ الصور الناتجة بسرعة.',
       'version': 'الإصدار: v1.0.4',
       'gradientWhite': 'أبيض ناصع',
       'gradientSky': 'أزرق سمائي',
@@ -61,15 +55,13 @@ class AppStrings {
       'gradientGray': 'رمادي عصري',
       'gradientDark': 'رمادي داكن فاخر',
       'aboutDescriptionTitle': 'حول التطبيق',
-      'aboutDescriptionText':
-          'Watermark Pro هو تطبيق متخصص لإضافة العلامات المائية والشعارات التجارية إلى مجموعة من الصور دفعة واحدة من وحدة التخزين.\n\nأهم وظائف التطبيق:\n1. اختيار عدة صور من الجهاز دفعة واحدة.\n2. اختيار شعار أو لوقو من الجهاز.\n3. إزالة خلفية الشعار تلقائياً عند تفعيل الخيار.\n4. التحكم في مكان وحجم وشفافية الشعار.\n5. تطبيق الإعدادات وحفظ الصور الناتجة بسرعة.',
+      'aboutDescriptionText': 'Watermark Pro هو تطبيق متخصص لإضافة العلامات المائية والشعارات التجارية إلى مجموعة من الصور دفعة واحدة من وحدة التخزين.\n\nأهم وظائف التطبيق:\n1. اختيار عدة صور من الجهاز دفعة واحدة.\n2. اختيار شعار أو لوقو من الجهاز.\n3. دعم صيغ صور الشعار JPG وJPEG وPNG وWEBP. ويُفضّل استخدام PNG أو WEBP للشعارات ذات الخلفية الشفافة.\n4. إزالة خلفية الشعار تلقائياً عند تفعيل الخيار.\n5. التحكم في مكان وحجم وشفافية الشعار.\n6. تطبيق الإعدادات وحفظ الصور الناتجة بسرعة.',
       'versionText': 'الإصدار: v1.0.4',
     },
     'en': {
       'appTitle': 'Watermark Pro',
       'saveSuccess': 'Saved Successfully',
-      'processedSuccess':
-          'Processed and saved {count} of {total} images successfully.',
+      'processedSuccess': 'Processed and saved {count} of {total} images successfully.',
       'savePath': 'Save path:',
       'ok': 'OK',
       'openFolder': 'Open Folder',
@@ -80,24 +72,23 @@ class AppStrings {
       'newSession': 'New Session',
       'settings': 'Settings',
       'exit': 'Exit',
-      'shareQuoteLabel':
-          'Write a quote or promotional text to share on social media:',
+      'shareQuoteLabel': 'Write a quote or promotional text to share on social media:',
       'shareQuoteHint': 'Example: New collection just arrived..',
+      'quoteHint': 'Enter a quote to share',
       'processedByApp': 'Images processed by Watermark Pro',
       'exitTooltip': 'Exit',
       'settingsTooltip': 'Settings',
-      'enlargeLogo': 'Enlarge Logo',
-      'rotateLogo': 'Rotate Logo',
-      'logoOpacity': 'Logo Opacity',
+      'enlargeLogo': 'Enlarge',
+      'rotateLogo': 'Rotate',
+      'logoOpacity': 'Opacity',
       'savingExporting': 'Saving and exporting {current}/{total}',
       'noImages': 'No Images',
       'selectedImage': 'Image {current} of {total}',
-      'dragLogoHint': 'Drag to move and resize the logo',
+      'dragLogoHint': 'Drag the logo to move it',
       'toolsTitle': 'Editing Tools',
       'applyToAllTitle': 'Apply to All',
       'applyToAllOn': 'Changes apply to all images',
-      'applyToAllOff':
-          'You can now customize the logo position and size for each image',
+      'applyToAllOff': 'Customize each image independently',
       'removeLogoBg': 'Remove Logo Background',
       'removeLogoBgHint': 'Make the logo transparent',
       'opacity': 'Opacity: {value}%',
@@ -107,18 +98,11 @@ class AppStrings {
       'gradientColor': 'Gradient',
       'selectedColor': 'Selected color: {color}',
       'language': 'Language',
-      'currentArabic': 'اللغة الحالية: العربية',
+      'currentArabic': 'Current Language: Arabic',
       'currentEnglish': 'Current Language: English',
       'changeLanguage': 'Change Language',
       'aboutTitle': 'About',
-      'aboutDescription':
-          'Watermark is a specialized app for adding watermarks and commercial logos to multiple images at once from device storage.\n\n'
-              'Main features:\n'
-              '1. Select multiple images from the device at once.\n'
-              '2. Select a logo from the device.\n'
-              '3. Automatically remove the logo background when enabled.\n'
-              '4. Control the logo position, size, and opacity.\n'
-              '5. Apply the settings and save the processed images quickly.',
+      'aboutDescription': 'Watermark Pro is a specialized app for adding watermarks and commercial logos to multiple images at once from device storage.\n\nMain features:\n1. Select multiple images from the device at once.\n2. Select a logo from the device.\n3. Supports JPG, JPEG, PNG, and WEBP logo image formats. PNG or WEBP is recommended for logos with transparent backgrounds.\n4. Automatically remove the logo background when enabled.\n5. Control the logo position, size, and opacity.\n6. Apply the settings and save the processed images quickly.',
       'version': 'Version: v1.0.4',
       'gradientWhite': 'Bright White',
       'gradientSky': 'Sky Blue',
@@ -127,8 +111,7 @@ class AppStrings {
       'gradientGray': 'Modern Gray',
       'gradientDark': 'Luxury Dark Charcoal',
       'aboutDescriptionTitle': 'About the App',
-      'aboutDescriptionText':
-          'Watermark Pro is a specialized app for adding watermarks and commercial logos to multiple images at once from device storage.\n\nMain features:\n1. Select multiple images from the device at once.\n2. Select a logo from the device.\n3. Automatically remove the logo background when enabled.\n4. Control the logo position, size, and opacity.\n5. Apply the settings and save the processed images quickly.',
+      'aboutDescriptionText': 'Watermark Pro is a specialized app for adding watermarks and commercial logos to multiple images at once from device storage.\n\nMain features:\n1. Select multiple images from the device at once.\n2. Select a logo from the device.\n3. Supports JPG, JPEG, PNG, and WEBP logo image formats. PNG or WEBP is recommended for logos with transparent backgrounds.\n4. Automatically remove the logo background when enabled.\n5. Control the logo position, size, and opacity.\n6. Apply the settings and save the processed images quickly.',
       'versionText': 'Version: v1.0.4',
     },
   };

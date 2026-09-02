@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:open_folder/open_folder.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart' as fp;
 import '../models/watermark_config.dart';
@@ -157,239 +156,245 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showSavedDialog(int successCount, String folderPath) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(22),
+      useSafeArea: false,
+      builder: (context) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          viewInsets: EdgeInsets.zero,
         ),
-        contentPadding: const EdgeInsets.fromLTRB(22, 18, 22, 8),
-        titlePadding: const EdgeInsets.fromLTRB(22, 20, 22, 4),
-        title: Column(
-          children: [
-            Container(
-              width: 68,
-              height: 68,
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                color: Colors.indigo.withAlpha(18),
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(22),
+          ),
+          contentPadding: const EdgeInsets.fromLTRB(22, 18, 22, 8),
+          titlePadding: const EdgeInsets.fromLTRB(22, 20, 22, 4),
+          title: Column(
+            children: [
+              Container(
+                width: 68,
+                height: 68,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  color: Colors.indigo.withAlpha(18),
+                ),
+                child: Image.asset(
+                  'assets/icon/app_icon.png',
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(
+                      Icons.check_circle_rounded,
+                      color: Colors.green,
+                      size: 48,
+                    );
+                  },
+                ),
               ),
-              child: Image.asset(
-                'assets/icon/app_icon.png',
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(
-                    Icons.check_circle_rounded,
-                    color: Colors.green,
-                    size: 48,
+              const SizedBox(height: 12),
+              Text(
+                AppStrings.get(context, 'saveSuccess'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.green.withAlpha(14),
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(
+                    color: Colors.green.withAlpha(45),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.green.withAlpha(25),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check_rounded,
+                        color: Colors.green,
+                        size: 25,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        AppStrings.get(
+                          context,
+                          'processedSuccess',
+                          args: {
+                            'count': '$successCount',
+                            'total': '${_targetImages.length}',
+                          },
+                        ),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+              const SizedBox(height: 14),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  AppStrings.get(context, 'shareQuoteLabel'),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: quoteController,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  hintText: AppStrings.get(context, 'quoteHint'),
+                  border: const OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  AppStrings.get(context, 'savePath'),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 7),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(
+                    color: Colors.grey.shade300,
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(top: 2),
+                      child: Icon(
+                        Icons.folder_rounded,
+                        color: Colors.indigo,
+                        size: 21,
+                      ),
+                    ),
+                    const SizedBox(width: 9),
+                    Expanded(
+                      child: SelectableText(
+                        folderPath,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.indigo,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actionsPadding: const EdgeInsets.fromLTRB(14, 4, 14, 12),
+          actions: [
+            if (_lastProcessedPaths.isNotEmpty)
+              TextButton.icon(
+                onPressed: () async {
+                  final files =
+                      _lastProcessedPaths.map((path) => XFile(path)).toList();
+
+                  await Share.shareXFiles(
+                    files,
+                    text: quoteController.text.trim().isNotEmpty
+                        ? quoteController.text.trim()
+                        : AppStrings.get(context, 'processedByApp'),
                   );
                 },
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              AppStrings.get(context, 'saveSuccess'),
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.green.withAlpha(14),
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(
-                  color: Colors.green.withAlpha(45),
+                icon: const Icon(
+                  Icons.share_rounded,
+                  size: 19,
+                ),
+                label: Text(
+                  AppStrings.get(context, 'share'),
                 ),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: Colors.green.withAlpha(25),
-                      shape: BoxShape.circle,
+            TextButton.icon(
+              onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
+                final result = await const MethodChannel('watermark_pro/folder')
+                    .invokeMethod<bool>(
+                  'openFolder',
+                  {'path': folderPath},
+                );
+
+                if (result != true && mounted) {
+                  messenger.showSnackBar(
+                    const SnackBar(
+                      content: Text('تعذر فتح المجلد'),
                     ),
-                    child: const Icon(
-                      Icons.check_rounded,
-                      color: Colors.green,
-                      size: 25,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      AppStrings.get(
-                        context,
-                        'processedSuccess',
-                        args: {
-                          'count': '$successCount',
-                          'total': '${_targetImages.length}',
-                        },
-                      ),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
+                  );
+                }
+              },
+              icon: const Icon(
+                Icons.folder_open_rounded,
+                size: 19,
               ),
+              label: Text(AppStrings.get(context, 'openFolder')),
             ),
-            const SizedBox(height: 14),
-            const SizedBox(height: 14),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(
-                AppStrings.get(context, 'shareQuoteLabel'),
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.indigo,
+                foregroundColor: Colors.white,
+                elevation: 3,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 11,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(13),
                 ),
               ),
-            ),
-            const SizedBox(height: 6),
-            TextField(
-              controller: quoteController,
-              maxLines: 2,
-              decoration: const InputDecoration(
-                hintText: 'Enter a quote to share',
-                border: OutlineInputBorder(),
-                isDense: true,
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(
+                Icons.check_rounded,
+                size: 19,
               ),
-            ),
-            const SizedBox(height: 14),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(
-                AppStrings.get(context, 'savePath'),
+              label: Text(
+                AppStrings.get(context, 'ok'),
                 style: const TextStyle(
-                  fontSize: 13,
                   fontWeight: FontWeight.w800,
                 ),
               ),
             ),
-            const SizedBox(height: 7),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(13),
-                border: Border.all(
-                  color: Colors.grey.shade300,
-                ),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(top: 2),
-                    child: Icon(
-                      Icons.folder_rounded,
-                      color: Colors.indigo,
-                      size: 21,
-                    ),
-                  ),
-                  const SizedBox(width: 9),
-                  Expanded(
-                    child: SelectableText(
-                      folderPath,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.indigo,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
-        actionsPadding: const EdgeInsets.fromLTRB(14, 4, 14, 12),
-        actions: [
-          if (_lastProcessedPaths.isNotEmpty)
-            TextButton.icon(
-              onPressed: () async {
-                final files =
-                    _lastProcessedPaths.map((path) => XFile(path)).toList();
-
-                await Share.shareXFiles(
-                  files,
-                  text: quoteController.text.trim().isNotEmpty
-                      ? quoteController.text.trim()
-                      : AppStrings.get(context, 'processedByApp'),
-                );
-              },
-              icon: const Icon(
-                Icons.share_rounded,
-                size: 19,
-              ),
-              label: Text(
-                AppStrings.get(context, 'share'),
-              ),
-            ),
-          TextButton.icon(
-            onPressed: () async {
-              final messenger = ScaffoldMessenger.of(context);
-              final result = await OpenFolder.openFolder(folderPath);
-
-              if (!result.isSuccess && mounted) {
-                messenger.showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      result.message.isNotEmpty
-                          ? result.message
-                          : 'تعذر فتح المجلد',
-                    ),
-                  ),
-                );
-              }
-            },
-            icon: const Icon(
-              Icons.folder_open_rounded,
-              size: 19,
-            ),
-            label: Text(AppStrings.get(context, 'openFolder')),
-          ),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.indigo,
-              foregroundColor: Colors.white,
-              elevation: 3,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 11,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(13),
-              ),
-            ),
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(
-              Icons.check_rounded,
-              size: 19,
-            ),
-            label: Text(
-              AppStrings.get(context, 'ok'),
-              style: const TextStyle(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -522,9 +527,25 @@ class _HomeScreenState extends State<HomeScreen> {
               actions: [
                 IconButton(
                   tooltip: AppStrings.get(context, 'exitTooltip'),
-                  icon: const Icon(
-                    Icons.exit_to_app_rounded,
-                    color: Color(0xFF263238),
+                  icon: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      shape: BoxShape.circle,
+                      boxShadow: const [
+                        BoxShadow(
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                          color: Color(0x22000000),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.exit_to_app_rounded,
+                      size: 21,
+                      color: primary,
+                    ),
                   ),
                   onPressed: () => SystemNavigator.pop(),
                 )
@@ -547,33 +568,92 @@ class _HomeScreenState extends State<HomeScreen> {
                           // =========================
                           // أزرار اختيار الصور والشعار والجلسة
                           // =========================
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _uiActionButton(
-                                  icon: Icons.photo_library_rounded,
-                                  title:
-                                      AppStrings.get(context, 'selectImages'),
-                                  color: primary,
-                                  onTap: _pickTargetImages,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: _uiActionButton(
-                                  icon: Icons.branding_watermark_rounded,
-                                  title: AppStrings.get(context, 'selectLogo'),
-                                  color: accent,
-                                  onTap: _pickLogoImage,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              _uiSmallActionButton(
-                                icon: Icons.refresh_rounded,
-                                color: primary,
-                                onTap: _resetSession,
-                              ),
-                            ],
+                          LayoutBuilder(
+                            builder: (context, constraints) {
+                              final bool compact = constraints.maxWidth < 390;
+                              final bool textOnly = constraints.maxWidth < 340;
+
+                              Widget button({
+                                required IconData icon,
+                                required String title,
+                                required Color color,
+                                required VoidCallback onTap,
+                              }) {
+                                return Expanded(
+                                  child: Material(
+                                    color: Colors.white.withAlpha(235),
+                                    borderRadius: BorderRadius.circular(13),
+                                    elevation: 2,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(13),
+                                      onTap: onTap,
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: compact ? 8 : 10,
+                                          horizontal: compact ? 3 : 6,
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            if (!textOnly) ...[
+                                              Icon(
+                                                icon,
+                                                color: color,
+                                                size: compact ? 17 : 20,
+                                              ),
+                                              SizedBox(width: compact ? 3 : 6),
+                                            ],
+                                            Flexible(
+                                              child: Text(
+                                                title,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  color:
+                                                      const Color(0xFF263238),
+                                                  fontSize: compact ? 10 : 11.5,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              return Row(
+                                children: [
+                                  button(
+                                    icon: Icons.photo_library_rounded,
+                                    title:
+                                        AppStrings.get(context, 'selectImages'),
+                                    color: primary,
+                                    onTap: _pickTargetImages,
+                                  ),
+                                  SizedBox(width: compact ? 5 : 8),
+                                  button(
+                                    icon: Icons.branding_watermark_rounded,
+                                    title:
+                                        AppStrings.get(context, 'selectLogo'),
+                                    color: accent,
+                                    onTap: _pickLogoImage,
+                                  ),
+                                  SizedBox(width: compact ? 5 : 8),
+                                  button(
+                                    icon: Icons.refresh_rounded,
+                                    title:
+                                        AppStrings.get(context, 'newSession'),
+                                    color: primary,
+                                    onTap: _resetSession,
+                                  ),
+                                ],
+                              );
+                            },
                           ),
 
                           const SizedBox(height: 10),
@@ -763,7 +843,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ? AppStrings.get(
                                               context, 'generatingPreview')
                                           : AppStrings.get(
-                                              context, 'dragLogoAnywhere'),
+                                              context, 'dragLogoHint'),
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontSize: 10.5,
@@ -880,37 +960,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 Row(
                                   children: [
-                                    Container(
-                                      width: 36,
-                                      height: 36,
-                                      decoration: BoxDecoration(
-                                        color: primary.withAlpha(28),
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Icon(
-                                        Icons.tune_rounded,
-                                        color: primary,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 9),
-                                    Text(
-                                      AppStrings.get(
-                                        context,
-                                        'toolsTitle',
-                                      ),
-                                      style: const TextStyle(
-                                        color: Color(0xFF263238),
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-
-                                const SizedBox(height: 8),
-
-                                Row(
-                                  children: [
                                     Expanded(
                                       child: _uiSwitchRow(
                                         icon: Icons.select_all_rounded,
@@ -920,6 +969,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                         value: _applyToAll,
                                         color: primary,
+                                        textColor: textColor,
                                         onChanged: (value) {
                                           setState(() {
                                             _applyToAll = value;
@@ -937,6 +987,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                         value: _globalConfig.removeLogoBg,
                                         color: accent,
+                                        textColor: textColor,
                                         onChanged: (value) {
                                           setState(() {
                                             _globalConfig.removeLogoBg = value;
@@ -947,9 +998,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ],
                                 ),
-
                                 const SizedBox(height: 5),
-
                                 Row(
                                   children: [
                                     Expanded(
@@ -965,12 +1014,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                         display:
                                             '${(currentConfig.scaleRatio * 100).toInt()}%',
                                         color: primary,
+                                        textColor: textColor,
                                         onChanged: (value) {
                                           _updateConfig(scaleRatio: value);
                                         },
                                       ),
                                     ),
-                                    const SizedBox(width: 7),
+                                  ],
+                                ),
+                                const SizedBox(height: 3),
+                                Row(
+                                  children: [
                                     Expanded(
                                       child: _uiCompactSlider(
                                         icon: Icons.rotate_right_rounded,
@@ -984,12 +1038,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                         display:
                                             '${(currentConfig.rotation * (180 / 3.14159)).toInt()}°',
                                         color: accent,
+                                        textColor: textColor,
                                         onChanged: (value) {
                                           _updateConfig(rotation: value);
                                         },
                                       ),
                                     ),
-                                    const SizedBox(width: 7),
+                                  ],
+                                ),
+                                const SizedBox(height: 3),
+                                Row(
+                                  children: [
                                     Expanded(
                                       child: _uiCompactSlider(
                                         icon: Icons.opacity_rounded,
@@ -1003,6 +1062,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         display:
                                             '${(currentConfig.opacity * 100).toInt()}%',
                                         color: primary,
+                                        textColor: textColor,
                                         onChanged: (value) {
                                           _updateConfig(opacity: value);
                                         },
@@ -1010,14 +1070,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ],
                                 ),
-
                                 const SizedBox(height: 13),
-
-                                // =========================
-                                // حفظ وتصدير
-                                // =========================
                                 SizedBox(
-                                  height: 54,
+                                  height: 46,
                                   child: ElevatedButton.icon(
                                     onPressed:
                                         _isProcessing ? null : _processImages,
@@ -1081,78 +1136,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _uiActionButton({
-    required IconData icon,
-    required String title,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.white.withAlpha(235),
-      borderRadius: BorderRadius.circular(13),
-      elevation: 2,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(13),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: 10,
-            horizontal: 6,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF263238),
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _uiSmallActionButton({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.white.withAlpha(235),
-      borderRadius: BorderRadius.circular(13),
-      elevation: 2,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(13),
-        onTap: onTap,
-        child: SizedBox(
-          width: 48,
-          height: 43,
-          child: Icon(
-            icon,
-            color: color,
-            size: 21,
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _uiSwitchRow({
     required IconData icon,
     required String title,
     required bool value,
     required Color color,
+    required Color textColor,
     required ValueChanged<bool> onChanged,
   }) {
     return Row(
@@ -1164,10 +1153,10 @@ class _HomeScreenState extends State<HomeScreen> {
             title,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF263238),
+              color: textColor,
             ),
           ),
         ),
@@ -1188,42 +1177,29 @@ class _HomeScreenState extends State<HomeScreen> {
     required double max,
     required String display,
     required Color color,
+    required Color textColor,
     required ValueChanged<double> onChanged,
   }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return Row(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 18),
-            const SizedBox(width: 4),
-            Flexible(
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF263238),
-                ),
-              ),
+        Icon(icon, color: color, size: 18),
+        const SizedBox(width: 4),
+        Expanded(
+          flex: 2,
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: textColor,
             ),
-          ],
-        ),
-        const SizedBox(height: 1),
-        Text(
-          display,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            color: color,
           ),
         ),
-        SizedBox(
-          height: 28,
+        const SizedBox(width: 6),
+        Expanded(
+          flex: 5,
           child: SliderTheme(
             data: SliderTheme.of(context).copyWith(
               trackHeight: 3,
@@ -1240,6 +1216,19 @@ class _HomeScreenState extends State<HomeScreen> {
               max: max,
               activeColor: color,
               onChanged: onChanged,
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+        SizedBox(
+          width: 38,
+          child: Text(
+            display,
+            textAlign: TextAlign.end,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: color,
             ),
           ),
         ),
