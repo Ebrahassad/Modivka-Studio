@@ -23,7 +23,7 @@ class AdsService {
   // Unity serves test creatives that always fill, which is useful for
   // verifying the whole pipeline (init -> load -> show) end to end
   // before switching to live ads.
-  static const bool _testMode = true;
+  static const bool _testMode = false;
 
   static bool _initialized = false;
   static bool _interstitialReady = false;

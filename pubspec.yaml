@@ -20,7 +20,7 @@ dependencies:
   image: ^4.9.2
   share_plus: ^10.1.0
   open_folder: ^0.0.4
-  unity_ads_plugin: ^0.3.28
+  unity_ads_plugin: ^0.5.0
 
 dev_dependencies:
   flutter_test:
