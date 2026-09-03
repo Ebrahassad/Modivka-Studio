@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,8 +29,6 @@ jobs:
           channel: stable
           cache: true
 
-      # The active Gradle settings file in this project is settings.gradle.
-      # Upgrade AGP only; keep Kotlin unchanged to minimize project changes.
       - name: Configure Android Gradle Plugin
         run: |
           set -e
@@ -51,6 +52,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          set -e
           flutter pub get --no-example
 
       - name: Restore Release Keystore
@@ -132,14 +134,10 @@ jobs:
             --android-skip-build-dependency-validation
 
       - name: Verify Final APK Signature
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
           set -e
 
           APK="build/app/outputs/flutter-apk/app-release.apk"
-          KEYSTORE="android/app/key/watermark-pro-release.jks"
 
           EXPECTED_SHA256="B6:1D:58:16:89:BC:8C:97:95:75:3F:66:F6:14:F7:93:F6:2C:9D:37:D1:DB:B7:5E:0B:1D:D6:35:D1:B7:BC:84"
 
@@ -187,8 +185,8 @@ jobs:
           APK_SHA256=$(
             "$APKSIGNER" verify \
               --print-certs \
-              "$APK" |
-            grep -m1 "Signer #1 certificate SHA-256 digest:" |
+              "$APK" 2>&1 |
+            grep -m1 "V2 Signer: certificate SHA-256 digest:" |
             sed 's/.*: //'
           )
 
@@ -204,22 +202,55 @@ jobs:
             exit 1
           fi
 
-          if [ "$APK_SHA256" != "$EXPECTED_SHA256" ]; then
+          APK_SHA256_NORMALIZED=$(echo "$APK_SHA256" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')
+          EXPECTED_SHA256_NORMALIZED=$(echo "$EXPECTED_SHA256" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')
+
+          if [ "$APK_SHA256_NORMALIZED" != "$EXPECTED_SHA256_NORMALIZED" ]; then
             echo "❌ ERROR: FINAL APK CERTIFICATE DOES NOT MATCH!"
-            echo "The APK will NOT be uploaded."
+            echo "Expected: $EXPECTED_SHA256_NORMALIZED"
+            echo "Actual:   $APK_SHA256_NORMALIZED"
+            echo "The APK will NOT be published."
             exit 1
           fi
 
           echo "✓ FINAL APK SIGNATURE MATCHED"
           echo "✓ FINAL APK IS SIGNED WITH THE APPROVED CERTIFICATE"
 
-      - name: Upload Release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: watermark-pro-release-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
-          if-no-files-found: error
-          retention-days: 30
+      - name: Publish APK to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+
+          APK="build/app/outputs/flutter-apk/app-release.apk"
+          TAG="latest"
+          TITLE="Watermark Pro - Latest Release"
+
+          echo "========================================"
+          echo "PUBLISH APK TO GITHUB RELEASE"
+          echo "========================================"
+
+          test -f "$APK"
+          ls -lh "$APK"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "✓ Existing latest release found"
+
+            gh release upload "$TAG" "$APK" --clobber
+
+            gh release edit "$TAG" \
+              --title "$TITLE" \
+              --notes "Latest successful Watermark Pro release. Build: ${{ github.run_number }}"
+          else
+            echo "Creating latest release..."
+
+            gh release create "$TAG" "$APK" \
+              --title "$TITLE" \
+              --notes "Latest successful Watermark Pro release. Build: ${{ github.run_number }}"
+          fi
+
+          echo "✓ APK uploaded to GitHub Release"
+          echo "✓ Previous APK replaced when applicable"
 
       - name: Release Build Summary
         run: |
@@ -232,6 +263,6 @@ jobs:
           echo "✓ Release keystore verified"
           echo "✓ APK signature verified"
           echo "✓ Certificate fingerprint matched"
-          echo "✓ APK artifact uploaded"
+          echo "✓ APK published to GitHub Release"
           echo
           ls -lh build/app/outputs/flutter-apk/app-release.apk
