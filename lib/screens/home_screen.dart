@@ -36,14 +36,14 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<File> _targetImages = [];
+  final List<File> _targetImages = [];
   File? _logoImage;
   Uint8List? _logoPreviewBytes;
   bool _isGeneratingPreview = false;
   final WatermarkConfig _globalConfig = WatermarkConfig();
   bool _applyToAll = true;
   int _selectedIndex = 0;
-  List<IndividualConfig> _imageConfigs = [];
+  final List<IndividualConfig> _imageConfigs = [];
   bool _isProcessing = false;
   int _processedCount = 0;
   final TextEditingController quoteController = TextEditingController();
