@@ -7,3 +7,9 @@
 build/
 *.apk
 *.so
+
+# Backup Files & Folders
+*.bak
+*.bak_*
+*backup*
+*.tmp

@@ -1,3 +1,4 @@
+import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/material.dart';
@@ -65,6 +66,25 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+    Future<void> _pickImageFromCamera() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? photo = await picker.pickImage(source: ImageSource.camera);
+    if (photo != null) {
+      setState(() {
+        _targetImages.add(File(photo.path));
+        _imageConfigs.add(
+          IndividualConfig(
+            xRatio: _globalConfig.customXRatio,
+            yRatio: _globalConfig.customYRatio,
+            scaleRatio: _globalConfig.scaleRatio,
+            opacity: _globalConfig.opacity,
+          ),
+        );
+        _selectedIndex = _targetImages.length - 1;
+      });
+    }
+  }
+
   Future<void> _pickTargetImages() async {
     fp.FilePickerResult? result = await fp.FilePicker.platform.pickFiles(
       type: fp.FileType.custom,
@@ -73,21 +93,28 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (result != null && result.paths.isNotEmpty) {
+      final newFiles = result.paths
+          .where((path) => path != null)
+          .map((path) => File(path!))
+          .toList();
+
       setState(() {
-        _targetImages = result.paths
-            .where((path) => path != null)
-            .map((path) => File(path!))
-            .toList();
-        _imageConfigs = List.generate(
-          _targetImages.length,
-          (_) => IndividualConfig(
-            xRatio: _globalConfig.customXRatio,
-            yRatio: _globalConfig.customYRatio,
-            scaleRatio: _globalConfig.scaleRatio,
-            opacity: _globalConfig.opacity,
+        final int startIndex = _targetImages.length;
+        _targetImages.addAll(newFiles);
+        _imageConfigs.addAll(
+          List.generate(
+            newFiles.length,
+            (_) => IndividualConfig(
+              xRatio: _globalConfig.customXRatio,
+              yRatio: _globalConfig.customYRatio,
+              scaleRatio: _globalConfig.scaleRatio,
+              opacity: _globalConfig.opacity,
+            ),
           ),
         );
-        _selectedIndex = 0;
+        if (startIndex < _targetImages.length) {
+          _selectedIndex = startIndex;
+        }
       });
     }
   }
@@ -535,7 +562,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               actions: [
                 IconButton(
-                  tooltip: AppStrings.get(context, 'exitTooltip'),
+                  tooltip: 'Camera',
                   icon: Container(
                     width: 38,
                     height: 38,
@@ -551,12 +578,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     child: Icon(
-                      Icons.exit_to_app_rounded,
+                      Icons.camera_alt_rounded,
                       size: 21,
                       color: primary,
                     ),
                   ),
-                  onPressed: () => SystemNavigator.pop(),
+                  onPressed: _pickImageFromCamera,
                 )
               ],
             ),
