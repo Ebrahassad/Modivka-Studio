@@ -66,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-    Future<void> _pickImageFromCamera() async {
+  Future<void> _pickImageFromCamera() async {
     final ImagePicker picker = ImagePicker();
     final XFile? photo = await picker.pickImage(source: ImageSource.camera);
     if (photo != null) {
@@ -431,6 +431,18 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _onSavePressed() {
+    AdsService.showInterstitialThen(
+      onReady: _processImages,
+      onUnavailable: () {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppStrings.get(context, 'adUnavailable'))),
+        );
+      },
     );
   }
 
@@ -1107,7 +1119,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   height: 46,
                                   child: ElevatedButton.icon(
                                     onPressed:
-                                        _isProcessing ? null : _processImages,
+                                        _isProcessing ? null : _onSavePressed,
                                     icon: _isProcessing
                                         ? const SizedBox(
                                             width: 21,

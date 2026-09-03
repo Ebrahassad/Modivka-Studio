@@ -80,8 +80,7 @@ class AdsService {
       UnityAds.load(
         placementId: interstitialPlacementId,
         onComplete: (placementId) => _interstitialReady = true,
-        onFailed: (placementId, error, message) =>
-            _interstitialReady = false,
+        onFailed: (placementId, error, message) => _interstitialReady = false,
       );
     } catch (_) {
       _interstitialReady = false;
@@ -123,6 +122,49 @@ class AdsService {
       );
     } catch (_) {
       _loadInterstitial();
+    }
+  }
+
+  /// Shows the interstitial and calls [onReady] once it's done being
+  /// shown (whether the user watched it fully, skipped it, or it failed
+  /// mid-playback) — used to gate an action behind watching an ad.
+  /// If no ad is available at all (offline, not loaded yet, etc.),
+  /// calls [onUnavailable] instead and never calls [onReady].
+  static void showInterstitialThen({
+    required VoidCallback onReady,
+    required VoidCallback onUnavailable,
+  }) {
+    if (!_supported) {
+      onReady();
+      return;
+    }
+
+    if (!_initialized || !_interstitialReady) {
+      _loadInterstitial();
+      onUnavailable();
+      return;
+    }
+
+    _interstitialReady = false;
+    try {
+      UnityAds.showVideoAd(
+        placementId: interstitialPlacementId,
+        onComplete: (placementId) {
+          _loadInterstitial();
+          onReady();
+        },
+        onSkipped: (placementId) {
+          _loadInterstitial();
+          onReady();
+        },
+        onFailed: (placementId, error, message) {
+          _loadInterstitial();
+          onReady();
+        },
+      );
+    } catch (_) {
+      _loadInterstitial();
+      onReady();
     }
   }
 
