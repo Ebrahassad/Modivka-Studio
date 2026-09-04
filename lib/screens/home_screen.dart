@@ -498,7 +498,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     if (mounted && successCount > 0) {
-      AdsService.showRewarded();
       _showSavedDialog(successCount, lastSavedPath);
     }
   }
