@@ -1189,13 +1189,16 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {
       return const SizedBox.shrink();
     }
+
     return SizedBox(
       width: double.infinity,
-      height: 50,
-      child: UnityBannerAd(
-        placementId: AdsService.bannerPlacementId,
-        onLoad: (placementId) {},
-        onFailed: (placementId, error, message) {},
+      height: 60,
+      child: Center(
+        child: UnityBannerAd(
+          placementId: AdsService.bannerPlacementId,
+          onLoad: (placementId) {},
+          onFailed: (placementId, error, message) {},
+        ),
       ),
     );
   }
