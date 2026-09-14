@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
 
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'Watermark Pro',
+          title: 'Modivka Studio',
           locale: locale,
           supportedLocales: const [
             Locale('ar'),

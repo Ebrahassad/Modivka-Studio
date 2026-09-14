@@ -19,7 +19,7 @@ class AppStrings {
       'shareQuoteLabel': 'اكتب اقتباس أو نص ترويجي للمشاركة على صفحات التواصل:',
       'shareQuoteHint': 'مثال: وصل حديثاً تشكيلة مميزة..',
       'quoteHint': 'اكتب اقتباساً للمشاركة',
-      'processedByApp': 'تمت معالجة الصور بواسطة Watermark Pro',
+      'processedByApp': 'تمت معالجة الصور بواسطة Modivka Studio',
       'exitTooltip': 'خروج',
       'settingsTooltip': 'الإعدادات',
       'enlargeLogo': 'تكبير',
@@ -47,7 +47,7 @@ class AppStrings {
       'changeLanguage': 'تغيير اللغة',
       'aboutTitle': 'حول التطبيق',
       'aboutDescription':
-          'Watermark Pro هو تطبيق متخصص لإضافة العلامات المائية والشعارات التجارية إلى مجموعة من الصور دفعة واحدة من وحدة التخزين.\n\nأهم وظائف التطبيق:\n1. اختيار عدة صور من الجهاز دفعة واحدة.\n2. اختيار شعار أو لوقو من الجهاز.\n3. دعم صيغ صور الشعار JPG وJPEG وPNG وWEBP. ويُفضّل استخدام PNG أو WEBP للشعارات ذات الخلفية الشفافة.\n4. إزالة خلفية الشعار تلقائياً عند تفعيل الخيار.\n5. التحكم في مكان وحجم وشفافية الشعار.\n6. تطبيق الإعدادات وحفظ الصور الناتجة بسرعة.',
+          'Modivka Studio هو تطبيق متخصص لإضافة العلامات المائية والشعارات التجارية إلى مجموعة من الصور دفعة واحدة من وحدة التخزين.\n\nأهم وظائف التطبيق:\n1. اختيار عدة صور من الجهاز دفعة واحدة.\n2. اختيار شعار أو لوقو من الجهاز.\n3. دعم صيغ صور الشعار JPG وJPEG وPNG وWEBP. ويُفضّل استخدام PNG أو WEBP للشعارات ذات الخلفية الشفافة.\n4. إزالة خلفية الشعار تلقائياً عند تفعيل الخيار.\n5. التحكم في مكان وحجم وشفافية الشعار.\n6. تطبيق الإعدادات وحفظ الصور الناتجة بسرعة.',
       'version': 'الإصدار: v1.0.0',
       'gradientWhite': 'أبيض ناصع',
       'gradientSky': 'أزرق سمائي',
@@ -57,11 +57,11 @@ class AppStrings {
       'gradientDark': 'رمادي داكن فاخر',
       'aboutDescriptionTitle': 'حول التطبيق',
       'aboutDescriptionText':
-          'Watermark Pro هو تطبيق متخصص لإضافة العلامات المائية والشعارات التجارية إلى مجموعة من الصور دفعة واحدة من وحدة التخزين.\n\nأهم وظائف التطبيق:\n1. اختيار عدة صور من الجهاز دفعة واحدة.\n2. اختيار شعار أو لوقو من الجهاز.\n3. دعم صيغ صور الشعار JPG وJPEG وPNG وWEBP. ويُفضّل استخدام PNG أو WEBP للشعارات ذات الخلفية الشفافة.\n4. إزالة خلفية الشعار تلقائياً عند تفعيل الخيار.\n5. التحكم في مكان وحجم وشفافية الشعار.\n6. تطبيق الإعدادات وحفظ الصور الناتجة بسرعة.',
+          'Modivka Studio هو تطبيق متخصص لإضافة العلامات المائية والشعارات التجارية إلى مجموعة من الصور دفعة واحدة من وحدة التخزين.\n\nأهم وظائف التطبيق:\n1. اختيار عدة صور من الجهاز دفعة واحدة.\n2. اختيار شعار أو لوقو من الجهاز.\n3. دعم صيغ صور الشعار JPG وJPEG وPNG وWEBP. ويُفضّل استخدام PNG أو WEBP للشعارات ذات الخلفية الشفافة.\n4. إزالة خلفية الشعار تلقائياً عند تفعيل الخيار.\n5. التحكم في مكان وحجم وشفافية الشعار.\n6. تطبيق الإعدادات وحفظ الصور الناتجة بسرعة.',
       'versionText': 'الإصدار: v1.0.0',
     },
     'en': {
-      'appTitle': 'Watermark Pro',
+      'appTitle': 'Modivka Studio',
       'saveSuccess': 'Saved Successfully',
       'processedSuccess':
           'Processed and saved {count} of {total} images successfully.',
@@ -79,7 +79,7 @@ class AppStrings {
           'Write a quote or promotional text to share on social media:',
       'shareQuoteHint': 'Example: New collection just arrived..',
       'quoteHint': 'Enter a quote to share',
-      'processedByApp': 'Images processed by Watermark Pro',
+      'processedByApp': 'Images processed by Modivka Studio',
       'exitTooltip': 'Exit',
       'settingsTooltip': 'Settings',
       'enlargeLogo': 'Enlarge',
@@ -107,7 +107,7 @@ class AppStrings {
       'changeLanguage': 'Change Language',
       'aboutTitle': 'About',
       'aboutDescription':
-          'Watermark Pro is a specialized app for adding watermarks and commercial logos to multiple images at once from device storage.\n\nMain features:\n1. Select multiple images from the device at once.\n2. Select a logo from the device.\n3. Supports JPG, JPEG, PNG, and WEBP logo image formats. PNG or WEBP is recommended for logos with transparent backgrounds.\n4. Automatically remove the logo background when enabled.\n5. Control the logo position, size, and opacity.\n6. Apply the settings and save the processed images quickly.',
+          'Modivka Studio is a specialized app for adding watermarks and commercial logos to multiple images at once from device storage.\n\nMain features:\n1. Select multiple images from the device at once.\n2. Select a logo from the device.\n3. Supports JPG, JPEG, PNG, and WEBP logo image formats. PNG or WEBP is recommended for logos with transparent backgrounds.\n4. Automatically remove the logo background when enabled.\n5. Control the logo position, size, and opacity.\n6. Apply the settings and save the processed images quickly.',
       'version': 'Version: v1.0.0',
       'gradientWhite': 'Bright White',
       'gradientSky': 'Sky Blue',
@@ -117,7 +117,7 @@ class AppStrings {
       'gradientDark': 'Luxury Dark Charcoal',
       'aboutDescriptionTitle': 'About the App',
       'aboutDescriptionText':
-          'Watermark Pro is a specialized app for adding watermarks and commercial logos to multiple images at once from device storage.\n\nMain features:\n1. Select multiple images from the device at once.\n2. Select a logo from the device.\n3. Supports JPG, JPEG, PNG, and WEBP logo image formats. PNG or WEBP is recommended for logos with transparent backgrounds.\n4. Automatically remove the logo background when enabled.\n5. Control the logo position, size, and opacity.\n6. Apply the settings and save the processed images quickly.',
+          'Modivka Studio is a specialized app for adding watermarks and commercial logos to multiple images at once from device storage.\n\nMain features:\n1. Select multiple images from the device at once.\n2. Select a logo from the device.\n3. Supports JPG, JPEG, PNG, and WEBP logo image formats. PNG or WEBP is recommended for logos with transparent backgrounds.\n4. Automatically remove the logo background when enabled.\n5. Control the logo position, size, and opacity.\n6. Apply the settings and save the processed images quickly.',
       'versionText': 'Version: v1.0.0',
     },
   };
