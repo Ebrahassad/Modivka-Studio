@@ -34,14 +34,29 @@ jobs:
           mkdir -p android/keystore
           echo "$KEYSTORE_BASE64" | base64 --decode > android/keystore/modivka-release.jks
 
+      - name: Verify signing setup
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          test -s android/keystore/modivka-release.jks
+          keytool -list             -keystore android/keystore/modivka-release.jks             -storepass "$KEYSTORE_PASSWORD"             -alias "$KEY_ALIAS"             >/dev/null
+          echo "Signing keystore verified successfully."
+
       - name: Create key.properties
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           cat > key.properties <<EOF2
           storeFile=android/keystore/modivka-release.jks
-          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
-          keyAlias=${{ secrets.KEY_ALIAS }}
-          keyPassword=${{ secrets.KEY_PASSWORD }}
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
           EOF2
+          chmod 600 key.properties
 
       - name: Flutter pub get
         run: flutter pub get
