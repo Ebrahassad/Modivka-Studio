@@ -1,23 +1,21 @@
-name: Flutter Release Build
+name: Modivka Studio Android Build
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   workflow_dispatch:
-
-permissions:
-  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up Java 17
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
@@ -29,240 +27,33 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Configure Android Gradle Plugin
-        run: |
-          set -e
-
-          SETTINGS="android/settings.gradle"
-
-          echo "===== BEFORE AGP CONFIGURATION ====="
-          grep -nE 'com.android.application|org.jetbrains.kotlin.android' "$SETTINGS" || true
-
-          sed -i \
-            's/id "com.android.application" version "[^"]*" apply false/id "com.android.application" version "8.13.0" apply false/' \
-            "$SETTINGS"
-
-          echo
-          echo "===== AFTER AGP CONFIGURATION ====="
-          grep -nE 'com.android.application|org.jetbrains.kotlin.android' "$SETTINGS"
-
-          echo
-          echo "===== GRADLE WRAPPER ====="
-          grep -n "distributionUrl" android/gradle/wrapper/gradle-wrapper.properties
-
-      - name: Install Dependencies
-        run: |
-          set -e
-          flutter pub get --no-example
-
-      - name: Restore Release Keystore
+      - name: Restore signing keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          set -e
+          mkdir -p android/keystore
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/keystore/modivka-release.jks
 
-          mkdir -p android/app/key
-
-          echo "$KEYSTORE_BASE64" | base64 --decode \
-            > android/app/key/watermark-pro-release.jks
-
-          cat > android/key.properties <<EOT
-          storePassword=$KEYSTORE_PASSWORD
-          keyPassword=$KEY_PASSWORD
-          keyAlias=$KEY_ALIAS
-          storeFile=key/watermark-pro-release.jks
-          EOT
-
-          chmod 600 android/app/key/watermark-pro-release.jks
-          chmod 600 android/key.properties
-
-          echo "✓ Release keystore restored"
-
-      - name: Verify Keystore Certificate
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+      - name: Create key.properties
         run: |
-          set -e
+          cat > key.properties <<EOF2
+          storeFile=android/keystore/modivka-release.jks
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          EOF2
 
-          KEYSTORE="android/app/key/watermark-pro-release.jks"
+      - name: Flutter pub get
+        run: flutter pub get
 
-          EXPECTED_SHA256="B6:1D:58:16:89:BC:8C:97:95:75:3F:66:F6:14:F7:93:F6:2C:9D:37:D1:DB:B7:5E:0B:1D:D6:35:D1:B7:BC:84"
+      - name: Analyze
+        run: flutter analyze
 
-          echo "========================================"
-          echo "RELEASE KEYSTORE VERIFICATION"
-          echo "========================================"
-          echo "Keystore: $KEYSTORE"
-          echo "Alias:    $KEY_ALIAS"
-          echo
+      - name: Build release APK
+        run: flutter build apk --release
 
-          ACTUAL_SHA256=$(keytool -list -v \
-            -keystore "$KEYSTORE" \
-            -alias "$KEY_ALIAS" \
-            -storepass "$KEYSTORE_PASSWORD" |
-            grep -m1 "SHA256:" |
-            sed 's/.*SHA256: //')
-
-          echo "Expected SHA-256:"
-          echo "$EXPECTED_SHA256"
-          echo
-          echo "Actual SHA-256:"
-          echo "$ACTUAL_SHA256"
-          echo
-
-          if [ "$ACTUAL_SHA256" != "$EXPECTED_SHA256" ]; then
-            echo "❌ ERROR: Keystore certificate does NOT match!"
-            exit 1
-          fi
-
-          echo "✓ Keystore certificate MATCHED"
-          echo "✓ Correct release certificate confirmed"
-
-      - name: Build Release APK
-        run: |
-          set -e
-
-          flutter clean
-          flutter pub get --no-example
-
-          flutter build apk \
-            --release \
-            --no-tree-shake-icons \
-            --android-skip-build-dependency-validation
-
-      - name: Verify Final APK Signature
-        run: |
-          set -e
-
-          APK="build/app/outputs/flutter-apk/app-release.apk"
-
-          EXPECTED_SHA256="B6:1D:58:16:89:BC:8C:97:95:75:3F:66:F6:14:F7:93:F6:2C:9D:37:D1:DB:B7:5E:0B:1D:D6:35:D1:B7:BC:84"
-
-          echo "========================================"
-          echo "FINAL APK SIGNATURE VERIFICATION"
-          echo "========================================"
-          echo "APK: $APK"
-          echo
-
-          if [ ! -f "$APK" ]; then
-            echo "❌ ERROR: Release APK was not created."
-            exit 1
-          fi
-
-          echo "APK size:"
-          ls -lh "$APK"
-          echo
-
-          echo "===== FIND APKSIGNER ====="
-
-          APKSIGNER=$(find "$ANDROID_HOME/build-tools" \
-            -type f \
-            -name apksigner \
-            | sort -V \
-            | tail -n1)
-
-          if [ -z "$APKSIGNER" ]; then
-            echo "❌ ERROR: apksigner not found."
-            exit 1
-          fi
-
-          echo "Using: $APKSIGNER"
-          echo
-
-          echo "===== APK SIGNATURE ====="
-
-          "$APKSIGNER" verify \
-            --verbose \
-            --print-certs \
-            "$APK"
-
-          echo
-          echo "===== EXTRACT APK SHA-256 ====="
-
-          APK_SHA256=$(
-            "$APKSIGNER" verify \
-              --print-certs \
-              "$APK" 2>&1 |
-            grep -m1 "V2 Signer: certificate SHA-256 digest:" |
-            sed 's/.*: //'
-          )
-
-          echo "Expected SHA-256:"
-          echo "$EXPECTED_SHA256"
-          echo
-          echo "APK SHA-256:"
-          echo "$APK_SHA256"
-          echo
-
-          if [ -z "$APK_SHA256" ]; then
-            echo "❌ ERROR: Could not read APK certificate SHA-256."
-            exit 1
-          fi
-
-          APK_SHA256_NORMALIZED=$(echo "$APK_SHA256" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')
-          EXPECTED_SHA256_NORMALIZED=$(echo "$EXPECTED_SHA256" | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')
-
-          if [ "$APK_SHA256_NORMALIZED" != "$EXPECTED_SHA256_NORMALIZED" ]; then
-            echo "❌ ERROR: FINAL APK CERTIFICATE DOES NOT MATCH!"
-            echo "Expected: $EXPECTED_SHA256_NORMALIZED"
-            echo "Actual:   $APK_SHA256_NORMALIZED"
-            echo "The APK will NOT be published."
-            exit 1
-          fi
-
-          echo "✓ FINAL APK SIGNATURE MATCHED"
-          echo "✓ FINAL APK IS SIGNED WITH THE APPROVED CERTIFICATE"
-
-      - name: Publish APK to GitHub Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -e
-
-          APK="build/app/outputs/flutter-apk/app-release.apk"
-          TAG="latest"
-          TITLE="Watermark Pro - Latest Release"
-
-          echo "========================================"
-          echo "PUBLISH APK TO GITHUB RELEASE"
-          echo "========================================"
-
-          test -f "$APK"
-          ls -lh "$APK"
-
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "✓ Existing latest release found"
-
-            gh release upload "$TAG" "$APK" --clobber
-
-            gh release edit "$TAG" \
-              --title "$TITLE" \
-              --notes "Latest successful Watermark Pro release. Build: ${{ github.run_number }}"
-          else
-            echo "Creating latest release..."
-
-            gh release create "$TAG" "$APK" \
-              --title "$TITLE" \
-              --notes "Latest successful Watermark Pro release. Build: ${{ github.run_number }}"
-          fi
-
-          echo "✓ APK uploaded to GitHub Release"
-          echo "✓ Previous APK replaced when applicable"
-
-      - name: Release Build Summary
-        run: |
-          echo "========================================"
-          echo "WATERMARK PRO RELEASE BUILD"
-          echo "========================================"
-          echo "✓ Flutter build completed"
-          echo "✓ AGP 8.13.0"
-          echo "✓ Java 17"
-          echo "✓ Release keystore verified"
-          echo "✓ APK signature verified"
-          echo "✓ Certificate fingerprint matched"
-          echo "✓ APK published to GitHub Release"
-          echo
-          ls -lh build/app/outputs/flutter-apk/app-release.apk
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Modivka-Studio-release
+          path: build/app/outputs/flutter-apk/app-release.apk

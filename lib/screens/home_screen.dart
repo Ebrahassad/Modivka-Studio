@@ -4,13 +4,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart' as fp;
-import '../models/watermark_config.dart';
+import '../core/models/watermark_config.dart';
 import '../providers/locale_provider.dart';
-import '../services/watermark_service.dart';
+import '../core/watermark/watermark_engine.dart';
+import '../core/watermark/watermark_output.dart';
 import '../utils/app_strings.dart';
-import '../services/ads_service.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:unity_ads_plugin/unity_ads_plugin.dart';
 
 class IndividualConfig {
   double xRatio;
@@ -36,11 +34,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const WatermarkEngine _watermarkEngine = WatermarkEngine();
+
   final List<File> _targetImages = [];
   File? _logoImage;
   Uint8List? _logoPreviewBytes;
   bool _isGeneratingPreview = false;
-  final WatermarkConfig _globalConfig = WatermarkConfig();
+  WatermarkConfig _globalConfig = const WatermarkConfig();
   bool _applyToAll = true;
   int _selectedIndex = 0;
   final List<IndividualConfig> _imageConfigs = [];
@@ -140,9 +140,9 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _isGeneratingPreview = true;
     });
-    final bytes = await WatermarkService.generateLogoPreviewBytes(
-      _logoImage!,
-      _globalConfig.removeLogoBg,
+    final bytes = _watermarkEngine.generateLogoPreview(
+      await _logoImage!.readAsBytes(),
+      removeBg: _globalConfig.removeLogoBg,
     );
     if (!mounted) return;
     setState(() {
@@ -151,21 +151,24 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _updateConfig(
-      {double? xRatio,
-      double? yRatio,
-      double? scaleRatio,
-      double? opacity,
-      double? rotation}) {
+  void _updateConfig({
+    double? xRatio,
+    double? yRatio,
+    double? scaleRatio,
+    double? opacity,
+    double? rotation,
+  }) {
     setState(() {
       if (_applyToAll) {
-        if (xRatio != null) _globalConfig.customXRatio = xRatio;
-        if (yRatio != null) _globalConfig.customYRatio = yRatio;
-        if (scaleRatio != null) _globalConfig.scaleRatio = scaleRatio;
-        if (opacity != null) _globalConfig.opacity = opacity;
-        if (rotation != null) _globalConfig.rotation = rotation;
+        _globalConfig = _globalConfig.copyWith(
+          customXRatio: xRatio,
+          customYRatio: yRatio,
+          scaleRatio: scaleRatio,
+          opacity: opacity,
+          rotation: rotation,
+        );
 
-        for (var cfg in _imageConfigs) {
+        for (final cfg in _imageConfigs) {
           if (xRatio != null) cfg.xRatio = xRatio;
           if (yRatio != null) cfg.yRatio = yRatio;
           if (scaleRatio != null) cfg.scaleRatio = scaleRatio;
@@ -173,7 +176,8 @@ class _HomeScreenState extends State<HomeScreen> {
           if (rotation != null) cfg.rotation = rotation;
         }
       } else if (_imageConfigs.isNotEmpty) {
-        var currentCfg = _imageConfigs[_selectedIndex];
+        final currentCfg = _imageConfigs[_selectedIndex];
+
         if (xRatio != null) currentCfg.xRatio = xRatio;
         if (yRatio != null) currentCfg.yRatio = yRatio;
         if (scaleRatio != null) currentCfg.scaleRatio = scaleRatio;
@@ -360,7 +364,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   final files =
                       _lastProcessedPaths.map((path) => XFile(path)).toList();
 
-                  AdsService.showInterstitial();
 
                   await Share.shareXFiles(
                     files,
@@ -415,7 +418,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               onPressed: () {
                 Navigator.pop(context);
-                AdsService.showInterstitial();
               },
               icon: const Icon(
                 Icons.check_rounded,
@@ -435,15 +437,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onSavePressed() {
-    AdsService.showInterstitialThen(
-      onReady: _processImages,
-      onUnavailable: () {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppStrings.get(context, 'adUnavailable'))),
-        );
-      },
-    );
+    _processImages();
   }
 
   Future<void> _processImages() async {
@@ -475,15 +469,23 @@ class _HomeScreenState extends State<HomeScreen> {
         rotation: cfg.rotation,
       );
 
-      final result = await WatermarkService.processImage(
-        targetImageFile: _targetImages[i],
-        logoFile: _logoImage!,
+      final resultBytes = _watermarkEngine.process(
+        targetBytes: await _targetImages[i].readAsBytes(),
+        logoBytes: await _logoImage!.readAsBytes(),
         config: processCfg,
       );
-      if (result != null) {
-        successCount++;
-        lastSavedPath = result.parent.path;
-        _lastProcessedPaths.add(result.path);
+
+      if (resultBytes != null) {
+        final outDir = await WatermarkOutput.save(
+          resultBytes,
+          processCfg.exportFormat,
+        );
+
+        if (outDir != null) {
+          successCount++;
+          lastSavedPath = outDir.parent.path;
+          _lastProcessedPaths.add(outDir.path);
+        }
       }
 
       if (mounted) {
@@ -1016,12 +1018,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                   textColor: textColor,
                                   onChanged: (value) {
                                     setState(() {
-                                      _globalConfig.removeLogoBg = value;
+                                      _globalConfig = _globalConfig.copyWith(
+                                        removeLogoBg: value,
+                                      );
                                     });
                                     _generateLogoPreview();
 
                                     if (value) {
-                                      AdsService.showRewarded();
                                     }
                                   },
                                 ),
@@ -1170,36 +1173,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-                  _buildBannerAd(),
                 ],
               ),
             ),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildBannerAd() {
-    if (kIsWeb) return const SizedBox.shrink();
-    try {
-      if (!(Platform.isAndroid || Platform.isIOS)) {
-        return const SizedBox.shrink();
-      }
-    } catch (_) {
-      return const SizedBox.shrink();
-    }
-
-    return SizedBox(
-      width: double.infinity,
-      height: 60,
-      child: Center(
-        child: UnityBannerAd(
-          placementId: AdsService.bannerPlacementId,
-          onLoad: (placementId) {},
-          onFailed: (placementId, error, message) {},
-        ),
-      ),
     );
   }
 

@@ -1,4 +1,4 @@
-package com.ebrahassad.watermark_pro
+package com.hassadi.modivka_studio
 
 import android.content.Intent
 import android.net.Uri

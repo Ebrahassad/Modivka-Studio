@@ -13,3 +13,8 @@ build/
 *.bak_*
 *backup*
 *.tmp
+android/keystore/
+*.jks
+key.properties
+android/keystore/
+*.jks
