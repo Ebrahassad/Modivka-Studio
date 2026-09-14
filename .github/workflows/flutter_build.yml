@@ -41,7 +41,11 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           test -s android/keystore/modivka-release.jks
-          keytool -list             -keystore android/keystore/modivka-release.jks             -storepass "$KEYSTORE_PASSWORD"             -alias "$KEY_ALIAS"             >/dev/null
+          keytool -list \
+            -keystore android/keystore/modivka-release.jks \
+            -storepass "$KEYSTORE_PASSWORD" \
+            -alias "$KEY_ALIAS" \
+            >/dev/null
           echo "Signing keystore verified successfully."
 
       - name: Create key.properties
@@ -50,13 +54,13 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          cat > key.properties <<EOF2
-          storeFile=android/keystore/modivka-release.jks
+          cat > android/key.properties <<EOF2
+          storeFile=keystore/modivka-release.jks
           storePassword=$KEYSTORE_PASSWORD
           keyAlias=$KEY_ALIAS
           keyPassword=$KEY_PASSWORD
           EOF2
-          chmod 600 key.properties
+          chmod 600 android/key.properties
 
       - name: Flutter pub get
         run: flutter pub get
