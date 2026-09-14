@@ -55,7 +55,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           cat > android/key.properties <<EOF2
-          storeFile=keystore/modivka-release.jks
+          storeFile=../keystore/modivka-release.jks
           storePassword=$KEYSTORE_PASSWORD
           keyAlias=$KEY_ALIAS
           keyPassword=$KEY_PASSWORD
