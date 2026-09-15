@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 
 class ImagesModule extends StatelessWidget {
   final VoidCallback? onWatermark;
+  final VoidCallback? onModify;
   final Widget? watermarkWorkspace;
 
   const ImagesModule({
     super.key,
     this.onWatermark,
+    this.onModify,
     this.watermarkWorkspace,
   });
 
@@ -16,6 +18,7 @@ class ImagesModule extends StatelessWidget {
       children: [
         _ImagesToolbar(
           onWatermark: onWatermark,
+          onModify: onModify,
         ),
         Expanded(
           child: watermarkWorkspace ??
@@ -28,9 +31,11 @@ class ImagesModule extends StatelessWidget {
 
 class _ImagesToolbar extends StatelessWidget {
   final VoidCallback? onWatermark;
+  final VoidCallback? onModify;
 
   const _ImagesToolbar({
     this.onWatermark,
+    this.onModify,
   });
 
   @override
@@ -50,9 +55,10 @@ class _ImagesToolbar extends StatelessWidget {
               label: 'Watermark',
               onPressed: onWatermark,
             ),
-            const _ImagesToolButton(
+            _ImagesToolButton(
               icon: Icons.tune_rounded,
               label: 'Modify',
+              onPressed: onModify,
             ),
           ],
         ),

@@ -1258,10 +1258,23 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
 
+        if (_activeImageTool == 'Modify') {
+          return _buildImageModifyWorkspace(
+            panelColor,
+            textColor,
+            accent,
+          );
+        }
+
         return ImagesModule(
           onWatermark: () {
             setState(() {
               _activeImageTool = 'Watermark';
+            });
+          },
+          onModify: () {
+            setState(() {
+              _activeImageTool = 'Modify';
             });
           },
         );
@@ -2381,6 +2394,68 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildImageModifyWorkspace(
+    Color panelColor,
+    Color textColor,
+    Color accent,
+  ) {
+    return Container(
+      margin: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: panelColor.withAlpha(230),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: textColor.withAlpha(18),
+        ),
+      ),
+      child: Column(
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () {
+                setState(() {
+                  _activeImageTool = '';
+                });
+              },
+              icon: const Icon(Icons.arrow_back_rounded),
+              label: const Text('Back to Images'),
+            ),
+          ),
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.tune_rounded,
+                    size: 56,
+                    color: accent,
+                  ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'Image Modify',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Modify tools workspace',
+                    style: TextStyle(
+                      color: textColor.withAlpha(170),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildToolsPanel(
     Color panelColor,
     Color textColor,
@@ -2407,6 +2482,19 @@ class _HomeScreenState extends State<HomeScreen> {
       child: ListView(
         padding: const EdgeInsets.all(14),
         children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () {
+                setState(() {
+                  _activeImageTool = '';
+                });
+              },
+              icon: const Icon(Icons.arrow_back_rounded),
+              label: const Text('Back to Images'),
+            ),
+          ),
+          const SizedBox(height: 4),
           const Text(
             'Watermark Tools',
             style: TextStyle(
