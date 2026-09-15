@@ -4,12 +4,13 @@ import 'package:file_picker/file_picker.dart' as fp;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../core/models/watermark_config.dart';
 import '../core/watermark/watermark_engine.dart';
-import '../core/watermark/watermark_output.dart';
+import '../core/export/export_service.dart';
+import '../core/export/export_result.dart';
 import '../providers/locale_provider.dart';
+import '../widgets/export_success_dialog.dart';
 import '../utils/app_strings.dart';
 
 class IndividualConfig {
@@ -70,8 +71,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final TextEditingController quoteController = TextEditingController();
 
-  List<String> _lastProcessedPaths = [];
-
   @override
   void dispose() {
     quoteController.dispose();
@@ -86,7 +85,6 @@ class _HomeScreenState extends State<HomeScreen> {
       _logoPreviewBytes = null;
       _selectedImage = 0;
       _processedCount = 0;
-      _lastProcessedPaths = [];
     });
   }
 
@@ -233,10 +231,11 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _isProcessing = true;
       _processedCount = 0;
-      _lastProcessedPaths = [];
     });
 
     int successCount = 0;
+    final exportedPaths = <String>[];
+    String outputDirectory = '';
 
     for (int i = 0; i < _targetImages.length; i++) {
       final cfg = _imageConfigs[i];
@@ -258,14 +257,20 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       if (resultBytes != null) {
-        final output = await WatermarkOutput.save(
-          resultBytes,
-          processConfig.exportFormat,
+        final extension =
+            processConfig.exportFormat == ExportFormat.png ? 'png' : 'jpg';
+
+        final output = await const ExportService().exportBytes(
+          module: 'Watermark',
+          files: [resultBytes],
+          extension: extension,
+          prefix: 'Watermark',
         );
 
-        if (output != null) {
-          successCount++;
-          _lastProcessedPaths.add(output.path);
+        if (output.success) {
+          successCount += output.successCount;
+          exportedPaths.addAll(output.savedPaths);
+          outputDirectory = output.outputDirectory;
         }
       }
 
@@ -283,55 +288,16 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     if (successCount > 0) {
-      _showSavedDialog(successCount);
+      await ExportSuccessDialog.show(
+        context,
+        ExportResult(
+          successCount: successCount,
+          totalCount: _targetImages.length,
+          outputDirectory: outputDirectory,
+          savedPaths: exportedPaths,
+        ),
+      );
     }
-  }
-
-  void _showSavedDialog(int count) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(
-            AppStrings.get(context, 'saveSuccess'),
-          ),
-          content: Text(
-            AppStrings.get(
-              context,
-              'processedSuccess',
-              args: {
-                'count': '$count',
-                'total': '${_targetImages.length}',
-              },
-            ),
-          ),
-          actions: [
-            if (_lastProcessedPaths.isNotEmpty)
-              TextButton.icon(
-                onPressed: () async {
-                  await Share.shareXFiles(
-                    _lastProcessedPaths.map(XFile.new).toList(),
-                    text: AppStrings.get(
-                      context,
-                      'processedByApp',
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.share_rounded),
-                label: Text(
-                  AppStrings.get(context, 'share'),
-                ),
-              ),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                AppStrings.get(context, 'ok'),
-              ),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -1280,32 +1246,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
       case 'Watermark':
       default:
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            final wide = constraints.maxWidth >= 850;
-
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: _buildCanvas(
-                    panelColor,
-                    textColor,
-                    accent,
-                  ),
-                ),
-                if (wide)
-                  SizedBox(
-                    width: 300,
-                    child: _buildToolsPanel(
-                      panelColor,
-                      textColor,
-                      accent,
-                    ),
-                  ),
-              ],
-            );
-          },
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: _buildCanvas(
+                panelColor,
+                textColor,
+                accent,
+              ),
+            ),
+            SizedBox(
+              width: 280,
+              child: _buildToolsPanel(
+                panelColor,
+                textColor,
+                accent,
+              ),
+            ),
+          ],
         );
     }
   }

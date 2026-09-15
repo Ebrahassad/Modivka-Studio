@@ -1,43 +1,26 @@
-import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:path_provider/path_provider.dart';
-
+import '../export/export_result.dart';
+import '../export/export_service.dart';
 import '../models/watermark_config.dart';
 
+/// Legacy compatibility wrapper.
+///
+/// New modules should use ExportService directly.
+/// Watermark keeps this wrapper so the old core API remains available
+/// without writing to Pictures/WatermarkPro.
 class WatermarkOutput {
-  static Future<File?> save(
+  static Future<ExportResult?> save(
     Uint8List bytes,
     ExportFormat format,
   ) async {
-    try {
-      Directory? outDir;
+    final extension = format == ExportFormat.png ? 'png' : 'jpg';
 
-      if (Platform.isAndroid) {
-        outDir = Directory(
-          '/storage/emulated/0/Pictures/WatermarkPro',
-        );
-
-        if (!await outDir.exists()) {
-          await outDir.create(recursive: true);
-        }
-      } else {
-        outDir = await getApplicationDocumentsDirectory();
-      }
-
-      final extension =
-          format == ExportFormat.png ? 'png' : 'jpg';
-
-      final fileName =
-          'WM_${DateTime.now().millisecondsSinceEpoch}.$extension';
-
-      final file = File('${outDir.path}/$fileName');
-
-      await file.writeAsBytes(bytes);
-
-      return file;
-    } catch (_) {
-      return null;
-    }
+    return const ExportService().exportBytes(
+      module: 'Watermark',
+      files: [bytes],
+      extension: extension,
+      prefix: 'Watermark',
+    );
   }
 }
