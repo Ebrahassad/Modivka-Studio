@@ -1145,16 +1145,34 @@ class _HomeScreenState extends State<HomeScreen> {
     Color accent, {
     VoidCallback? onPressed,
   }) {
+    final enabled = onPressed != null;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Tooltip(
         message: label,
-        child: IconButton(
-          onPressed: onPressed,
-          icon: Icon(
-            icon,
-            size: 22,
-            color: onPressed == null ? accent.withAlpha(80) : accent,
+        waitDuration: const Duration(milliseconds: 250),
+        showDuration: const Duration(seconds: 2),
+        preferBelow: false,
+        verticalOffset: 8,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: enabled ? accent.withAlpha(12) : Colors.transparent,
+              border: Border.all(
+                color: enabled ? accent.withAlpha(28) : Colors.transparent,
+              ),
+            ),
+            child: Icon(
+              icon,
+              size: 22,
+              color: enabled ? accent : accent.withAlpha(75),
+            ),
           ),
         ),
       ),
@@ -1774,18 +1792,12 @@ class _HomeScreenState extends State<HomeScreen> {
     required Color textColor,
     required Color accent,
   }) {
-    final isCreate = title == 'Create';
-
-    if (!isCreate) {
+    if (title != 'Create') {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 64,
-              color: accent,
-            ),
+            Icon(icon, size: 64, color: accent),
             const SizedBox(height: 16),
             Text(
               title,
@@ -1810,6 +1822,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final canvasWidth = _projectCreated ? _projectWidth : 1080.0;
+        final canvasHeight = _projectCreated ? _projectHeight : 1080.0;
+
         return Container(
           margin: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -1829,145 +1844,104 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               Center(
-                child: Container(
-                  width: constraints.maxWidth > 700
-                      ? 560
-                      : constraints.maxWidth * 0.72,
-                  height: constraints.maxHeight > 500
-                      ? 380
-                      : constraints.maxHeight * 0.58,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
-                    boxShadow: const [
-                      BoxShadow(
-                        blurRadius: 35,
-                        spreadRadius: 2,
-                        color: Color(0x55000000),
-                      ),
-                    ],
-                  ),
-                  child: _projectCreated
-                      ? Stack(
-                          children: [
-                            Center(
-                              child: AspectRatio(
-                                aspectRatio: _projectWidth / _projectHeight,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: _projectBackground,
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        blurRadius: 35,
-                                        spreadRadius: 2,
-                                        color: Color(0x55000000),
-                                      ),
-                                    ],
+                child: InteractiveViewer(
+                  minScale: 0.25,
+                  maxScale: 4,
+                  boundaryMargin: const EdgeInsets.all(120),
+                  child: Container(
+                    width: constraints.maxWidth > 700
+                        ? 560
+                        : constraints.maxWidth * 0.72,
+                    height: constraints.maxHeight > 500
+                        ? 380
+                        : constraints.maxHeight * 0.58,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withAlpha(35),
+                      boxShadow: const [
+                        BoxShadow(
+                          blurRadius: 35,
+                          spreadRadius: 2,
+                          color: Color(0x55000000),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: AspectRatio(
+                        aspectRatio: canvasWidth / canvasHeight,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: _projectBackground,
+                            borderRadius: BorderRadius.circular(2),
+                            boxShadow: const [
+                              BoxShadow(
+                                blurRadius: 25,
+                                spreadRadius: 1,
+                                color: Color(0x55000000),
+                              ),
+                            ],
+                          ),
+                          child: Stack(
+                            children: [
+                              Positioned(
+                                left: 12,
+                                top: 10,
+                                child: Text(
+                                  '${canvasWidth.round()} × ${canvasHeight.round()} px',
+                                  style: TextStyle(
+                                    color:
+                                        _projectBackground.computeLuminance() >
+                                                0.5
+                                            ? Colors.black54
+                                            : Colors.white70,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
                                   ),
-                                  child: Stack(
+                                ),
+                              ),
+                              if (!_projectCreated)
+                                Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Positioned(
-                                        left: 14,
-                                        top: 12,
-                                        child: Text(
-                                          '${_projectWidth.round()} × ${_projectHeight.round()} px',
-                                          style: TextStyle(
-                                            color: _projectBackground
-                                                        .computeLuminance() >
-                                                    0.5
-                                                ? Colors.black54
-                                                : Colors.white70,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w700,
-                                          ),
+                                      Icon(
+                                        Icons.auto_awesome_rounded,
+                                        size: 52,
+                                        color: accent,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'Create something new',
+                                        style: TextStyle(
+                                          color: _projectBackground
+                                                      .computeLuminance() >
+                                                  0.5
+                                              ? const Color(0xFF20242A)
+                                              : Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        'Start with a blank canvas',
+                                        style: TextStyle(
+                                          color: _projectBackground
+                                                      .computeLuminance() >
+                                                  0.5
+                                              ? Colors.black54
+                                              : Colors.white70,
+                                          fontSize: 12,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ),
-                            ),
-                            Positioned(
-                              right: 14,
-                              top: 14,
-                              child: IconButton.filled(
-                                tooltip: 'New Project',
-                                onPressed: _showCreateProjectDialog,
-                                icon: const Icon(
-                                  Icons.add_rounded,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : Stack(
-                          children: [
-                            Positioned(
-                              top: 18,
-                              left: 18,
-                              child: Text(
-                                'New Project',
-                                style: TextStyle(
-                                  color: Colors.black.withAlpha(120),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                            Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.add_circle_outline_rounded,
-                                    size: 58,
-                                    color: accent,
-                                  ),
-                                  const SizedBox(height: 14),
-                                  const Text(
-                                    'Create something new',
-                                    style: TextStyle(
-                                      color: Color(0xFF20242A),
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 7),
-                                  Text(
-                                    'Start with a blank workspace',
-                                    style: TextStyle(
-                                      color: Colors.black.withAlpha(120),
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  FilledButton.icon(
-                                    onPressed: _showCreateProjectDialog,
-                                    icon: const Icon(
-                                      Icons.add_rounded,
-                                      size: 19,
-                                    ),
-                                    label: const Text(
-                                      'New Project',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: accent,
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 22,
-                                        vertical: 13,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
               Positioned(
@@ -1975,7 +1949,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 right: 14,
                 bottom: 14,
                 child: Container(
-                  height: 44,
+                  height: 46,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
                     color: panelColor.withAlpha(235),
@@ -1987,14 +1961,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     children: [
                       Icon(
-                        Icons.layers_rounded,
+                        Icons.dashboard_customize_rounded,
                         size: 19,
                         color: accent,
                       ),
                       const SizedBox(width: 8),
-                      const Text(
-                        'Layers',
-                        style: TextStyle(
+                      Text(
+                        _projectCreated
+                            ? '${_projectWidth.round()} × ${_projectHeight.round()} px'
+                            : 'No project',
+                        style: const TextStyle(
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -2023,6 +1999,24 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 14,
+                top: 14,
+                child: FilledButton.icon(
+                  onPressed: _showCreateProjectDialog,
+                  icon: const Icon(
+                    Icons.add_rounded,
+                    size: 19,
+                  ),
+                  label: Text(
+                    _projectCreated ? 'New Project' : 'Create Project',
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: accent,
+                    foregroundColor: Colors.white,
                   ),
                 ),
               ),
