@@ -2,16 +2,18 @@ include: package:flutter_lints/flutter.yaml
 
 analyzer:
   exclude:
+    - "backups/**"
+    - "**/backups/**"
     - "**/*.bak"
     - "**/*.backup"
     - "**/*_bak.*"
-    - build/**
-    - android/**
-    - ios/**
-    - web/**
-    - windows/**
-    - macos/**
-    - linux/**
+    - "build/**"
+    - "android/**"
+    - "ios/**"
+    - "web/**"
+    - "windows/**"
+    - "macos/**"
+    - "linux/**"
 
 linter:
   rules:

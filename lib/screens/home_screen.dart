@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../modules/images/images_module.dart';
+import '../modules/text/text_module.dart';
+import '../modules/video/video_module.dart';
 import '../core/models/watermark_config.dart';
 import '../core/watermark/watermark_engine.dart';
 import '../core/export/export_service.dart';
@@ -54,8 +57,8 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedImage = 0;
   int _processedCount = 0;
 
-  String _activeModule = 'Watermark';
-
+  String _activeModule = 'Images';
+  String _activeImageTool = '';
   double _modifyRotation = 0.0;
   double _modifyOpacity = 1.0;
   double _modifyBrightness = 0.0;
@@ -453,6 +456,27 @@ class _HomeScreenState extends State<HomeScreen> {
             active: _activeModule == 'Watermark',
             accent: accent,
             onTap: () => _selectModule('Watermark'),
+          ),
+          _moduleButton(
+            icon: Icons.image_rounded,
+            title: 'Images',
+            active: _activeModule == 'Images',
+            accent: accent,
+            onTap: () => _selectModule('Images'),
+          ),
+          _moduleButton(
+            icon: Icons.text_fields_rounded,
+            title: 'Text',
+            active: _activeModule == 'Text',
+            accent: accent,
+            onTap: () => _selectModule('Text'),
+          ),
+          _moduleButton(
+            icon: Icons.video_library_rounded,
+            title: 'Video',
+            active: _activeModule == 'Video',
+            accent: accent,
+            onTap: () => _selectModule('Video'),
           ),
           _moduleButton(
             icon: Icons.auto_awesome_rounded,
@@ -1225,6 +1249,28 @@ class _HomeScreenState extends State<HomeScreen> {
     Color accent,
   ) {
     switch (_activeModule) {
+      case 'Images':
+        if (_activeImageTool == 'Watermark') {
+          return _buildToolsPanel(
+            panelColor,
+            textColor,
+            accent,
+          );
+        }
+
+        return ImagesModule(
+          onWatermark: () {
+            setState(() {
+              _activeImageTool = 'Watermark';
+            });
+          },
+        );
+
+      case 'Text':
+        return const TextModule();
+
+      case 'Video':
+        return const VideoModule();
       case 'Create':
         return _buildModuleWorkspace(
           'Create',
