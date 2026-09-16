@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../core/models/canvas_layer.dart';
 import '../../core/models/workspace_item.dart';
+import '../../widgets/image_canvas.dart';
 import '../../widgets/item_strip.dart';
+import '../../widgets/layers_panel.dart';
 import '../../widgets/tool_bar.dart';
 
-class ImagesWorkspace extends StatelessWidget {
+class ImagesWorkspace extends StatefulWidget {
   final List<WorkspaceItem> items;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
@@ -21,12 +24,113 @@ class ImagesWorkspace extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final current =
-        items.isNotEmpty && selectedIndex >= 0 && selectedIndex < items.length
-            ? items[selectedIndex]
-            : null;
+  State<ImagesWorkspace> createState() => _ImagesWorkspaceState();
+}
 
+class _ImagesWorkspaceState extends State<ImagesWorkspace> {
+  final List<CanvasLayer> _layers = [];
+  int _selectedLayer = -1;
+
+  @override
+  void didUpdateWidget(
+    covariant ImagesWorkspace oldWidget,
+  ) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.items.length != oldWidget.items.length) {
+      _syncLayers();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _syncLayers();
+  }
+
+  void _syncLayers() {
+    for (final item in widget.items) {
+      final exists = _layers.any(
+        (layer) => layer.id == item.path && item.path.isNotEmpty,
+      );
+
+      if (!exists && item.bytes != null) {
+        _layers.insert(
+          0,
+          CanvasLayer(
+            id: item.path.isEmpty
+                ? '${item.name}-${_layers.length}'
+                : item.path,
+            name: item.name,
+            type: LayerType.image,
+            bytes: item.bytes,
+            x: 20,
+            y: 20,
+            width: 420,
+            height: 300,
+          ),
+        );
+      }
+    }
+
+    if (_layers.isNotEmpty && _selectedLayer < 0) {
+      _selectedLayer = 0;
+    }
+
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  void _moveSelected(Offset delta) {
+    if (_selectedLayer < 0 || _selectedLayer >= _layers.length) {
+      return;
+    }
+
+    final layer = _layers[_selectedLayer];
+
+    if (layer.locked) {
+      return;
+    }
+
+    setState(() {
+      layer.x += delta.dx;
+      layer.y += delta.dy;
+    });
+  }
+
+  void _toggleVisibility(int index) {
+    setState(() {
+      _layers[index].visible = !_layers[index].visible;
+    });
+  }
+
+  void _toggleLock(int index) {
+    setState(() {
+      _layers[index].locked = !_layers[index].locked;
+    });
+  }
+
+  void _addTextLayer() {
+    setState(() {
+      _layers.insert(
+        0,
+        CanvasLayer(
+          id: 'text-${DateTime.now().microsecondsSinceEpoch}',
+          name: 'Text Layer',
+          type: LayerType.text,
+          x: 50,
+          y: 50,
+          width: 300,
+          height: 90,
+        ),
+      );
+      _selectedLayer = 0;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
         ModivkaToolBar(
@@ -34,101 +138,88 @@ class ImagesWorkspace extends StatelessWidget {
             ToolDefinition(
               icon: Icons.add_photo_alternate_outlined,
               name: 'Add Image',
-              onPressed: onAddImage,
+              onPressed: widget.onAddImage,
             ),
             ToolDefinition(
               icon: Icons.layers_outlined,
-              name: 'Add Image / Logo Layer',
-              onPressed: onAddLayer,
+              name: 'Add Image Layer',
+              onPressed: widget.onAddLayer,
             ),
-            const ToolDefinition(icon: Icons.content_cut_rounded, name: 'Crop'),
+            ToolDefinition(
+              icon: Icons.text_fields_rounded,
+              name: 'Add Text Layer',
+              onPressed: _addTextLayer,
+            ),
+            const ToolDefinition(
+              icon: Icons.content_cut_rounded,
+              name: 'Crop',
+            ),
             const ToolDefinition(
               icon: Icons.rotate_right_rounded,
               name: 'Rotate',
             ),
-            const ToolDefinition(icon: Icons.flip_rounded, name: 'Flip'),
-            const ToolDefinition(icon: Icons.zoom_in_rounded, name: 'Zoom In'),
+            const ToolDefinition(
+              icon: Icons.flip_rounded,
+              name: 'Flip',
+            ),
+            const ToolDefinition(
+              icon: Icons.zoom_in_rounded,
+              name: 'Zoom In',
+            ),
             const ToolDefinition(
               icon: Icons.zoom_out_rounded,
               name: 'Zoom Out',
             ),
-            const ToolDefinition(icon: Icons.opacity_rounded, name: 'Opacity'),
             const ToolDefinition(
               icon: Icons.auto_fix_high_rounded,
               name: 'Remove Background',
             ),
             const ToolDefinition(
-              icon: Icons.photo_size_select_large_outlined,
-              name: 'Resize',
+              icon: Icons.undo_rounded,
+              name: 'Undo',
             ),
             const ToolDefinition(
-              icon: Icons.wb_sunny_outlined,
-              name: 'Brightness',
+              icon: Icons.redo_rounded,
+              name: 'Redo',
             ),
-            const ToolDefinition(
-              icon: Icons.contrast_rounded,
-              name: 'Contrast',
-            ),
-            const ToolDefinition(
-              icon: Icons.palette_outlined,
-              name: 'Color / Saturation',
-            ),
-            const ToolDefinition(
-              icon: Icons.filter_vintage_outlined,
-              name: 'Filters',
-            ),
-            const ToolDefinition(icon: Icons.undo_rounded, name: 'Undo'),
-            const ToolDefinition(icon: Icons.redo_rounded, name: 'Redo'),
           ],
         ),
         Expanded(
-          child: Container(
-            margin: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.black.withAlpha(75),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.white.withAlpha(15)),
-            ),
-            child:
-                current == null ? _emptyState(context) : _imageState(current),
+          child: Row(
+            children: [
+              Expanded(
+                child: ImageCanvas(
+                  layers: _layers,
+                  selectedIndex: _selectedLayer,
+                  onSelected: (index) {
+                    setState(() {
+                      _selectedLayer = index;
+                    });
+                  },
+                  onMove: _moveSelected,
+                ),
+              ),
+              LayersPanel(
+                layers: _layers,
+                selectedIndex: _selectedLayer,
+                onSelected: (index) {
+                  setState(() {
+                    _selectedLayer = index;
+                  });
+                },
+                onVisibilityChanged: _toggleVisibility,
+                onLockChanged: _toggleLock,
+              ),
+            ],
           ),
         ),
         const Divider(height: 1),
         ItemStrip(
-          items: items,
-          selectedIndex: selectedIndex,
-          onSelected: onSelected,
+          items: widget.items,
+          selectedIndex: widget.selectedIndex,
+          onSelected: widget.onSelected,
         ),
       ],
-    );
-  }
-
-  Widget _emptyState(BuildContext context) {
-    return Center(
-      child: FilledButton.icon(
-        onPressed: onAddImage,
-        icon: const Icon(Icons.add_photo_alternate_outlined),
-        label: const Text('Open Image'),
-      ),
-    );
-  }
-
-  Widget _imageState(WorkspaceItem item) {
-    if (item.bytes == null) {
-      return Center(
-        child: Text(
-          item.name,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-        ),
-      );
-    }
-
-    return Center(
-      child: InteractiveViewer(
-        minScale: 0.25,
-        maxScale: 6,
-        child: Image.memory(item.bytes!, fit: BoxFit.contain),
-      ),
     );
   }
 }
