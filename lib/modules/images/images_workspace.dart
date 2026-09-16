@@ -33,8 +33,13 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
   CanvasLayer? _copiedLayer;
   final FocusNode _workspaceFocusNode = FocusNode();
 
+  final List<List<CanvasLayer>> _undoStack = [];
+  final List<List<CanvasLayer>> _redoStack = [];
   final List<CanvasLayer> _layers = [];
+
   int _selectedLayer = -1;
+
+  static const int _maxHistoryEntries = 80;
 
   @override
   void initState() {
@@ -94,6 +99,86 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     }
 
     return _layers[_selectedLayer];
+  }
+
+  List<CanvasLayer> _cloneLayers(List<CanvasLayer> source) {
+    return source
+        .map(
+          (layer) => _cloneLayer(
+            layer,
+            offsetX: 0,
+            offsetY: 0,
+          ),
+        )
+        .toList();
+  }
+
+  void _saveHistory() {
+    _undoStack.add(_cloneLayers(_layers));
+
+    if (_undoStack.length > _maxHistoryEntries) {
+      _undoStack.removeAt(0);
+    }
+
+    _redoStack.clear();
+  }
+
+  bool get _canUndo => _undoStack.isNotEmpty;
+
+  bool get _canRedo => _redoStack.isNotEmpty;
+
+  void _restoreLayers(List<CanvasLayer> snapshot) {
+    _layers
+      ..clear()
+      ..addAll(_cloneLayers(snapshot));
+
+    if (_layers.isEmpty) {
+      _selectedLayer = -1;
+    } else {
+      _selectedLayer = _selectedLayer.clamp(0, _layers.length - 1);
+    }
+  }
+
+  void _undo() {
+    if (!_canUndo) {
+      return;
+    }
+
+    final current = _cloneLayers(_layers);
+    final previous = _undoStack.removeLast();
+
+    _redoStack.add(current);
+
+    setState(() {
+      _restoreLayers(previous);
+    });
+
+    _workspaceFocusNode.requestFocus();
+  }
+
+  void _redo() {
+    if (!_canRedo) {
+      return;
+    }
+
+    final current = _cloneLayers(_layers);
+    final next = _redoStack.removeLast();
+
+    _undoStack.add(current);
+
+    setState(() {
+      _restoreLayers(next);
+    });
+
+    _workspaceFocusNode.requestFocus();
+  }
+
+  void _mutateWithHistory(VoidCallback mutation) {
+    _saveHistory();
+
+    setState(() {
+      mutation();
+    });
   }
 
   void _moveSelected(Offset delta) {
@@ -222,7 +307,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       }
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.x = x;
       layer.y = y;
     });
@@ -235,7 +320,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.x = value;
     });
   }
@@ -247,7 +332,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.y = value;
     });
   }
@@ -259,7 +344,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.width = value.clamp(20.0, 2000.0);
     });
   }
@@ -271,7 +356,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.height = value.clamp(20.0, 2000.0);
     });
   }
@@ -287,7 +372,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       final newWidth = (layer.width + delta.dx).clamp(40.0, 2000.0);
       final newHeight = (layer.height + delta.dy).clamp(40.0, 2000.0);
 
@@ -318,7 +403,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.rotation += delta * 0.01;
 
       // Keep rotation normalized to one full turn.
@@ -339,7 +424,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.rotation = value;
     });
   }
@@ -351,7 +436,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.opacity = value.clamp(0.0, 1.0);
     });
   }
@@ -363,7 +448,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.text = value;
       layer.name = value.trim().isEmpty ? 'Text Layer' : value.trim();
     });
@@ -375,7 +460,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.fontFamily = value;
     });
   }
@@ -386,7 +471,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.fontSize = value.clamp(6.0, 300.0);
     });
   }
@@ -397,7 +482,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.bold = value;
     });
   }
@@ -408,7 +493,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.italic = value;
     });
   }
@@ -420,7 +505,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.underline = value;
     });
   }
@@ -432,7 +517,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.strikethrough = value;
     });
   }
@@ -444,7 +529,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.letterSpacing = value.clamp(-10.0, 50.0);
     });
   }
@@ -456,7 +541,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.lineHeight = value.clamp(0.5, 3.0);
     });
   }
@@ -467,7 +552,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.textColor = value;
     });
   }
@@ -478,7 +563,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.textAlignment = value;
     });
   }
@@ -487,7 +572,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     final layer = _currentLayer;
     if (layer == null || layer.locked) return;
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.x = 0;
     });
   }
@@ -496,7 +581,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     final layer = _currentLayer;
     if (layer == null || layer.locked) return;
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.x = (1200 - layer.width) / 2;
     });
   }
@@ -505,7 +590,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     final layer = _currentLayer;
     if (layer == null || layer.locked) return;
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.x = 1200 - layer.width;
     });
   }
@@ -514,7 +599,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     final layer = _currentLayer;
     if (layer == null || layer.locked) return;
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.y = 0;
     });
   }
@@ -523,7 +608,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     final layer = _currentLayer;
     if (layer == null || layer.locked) return;
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.y = (800 - layer.height) / 2;
     });
   }
@@ -532,7 +617,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     final layer = _currentLayer;
     if (layer == null || layer.locked) return;
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.y = 800 - layer.height;
     });
   }
@@ -556,7 +641,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
         movable.fold<double>(0, (sum, layer) => sum + layer.width);
     final gap = (end - start - totalWidth) / (movable.length - 1);
 
-    setState(() {
+    _mutateWithHistory(() {
       double x = start;
 
       for (final layer in movable) {
@@ -585,7 +670,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
         movable.fold<double>(0, (sum, layer) => sum + layer.height);
     final gap = (end - start - totalHeight) / (movable.length - 1);
 
-    setState(() {
+    _mutateWithHistory(() {
       double y = start;
 
       for (final layer in movable) {
@@ -602,7 +687,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       layer.locked = value;
     });
   }
@@ -612,7 +697,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       _layers.removeAt(_selectedLayer);
 
       if (_layers.isEmpty) {
@@ -632,7 +717,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
 
     final copy = _cloneLayer(layer);
 
-    setState(() {
+    _mutateWithHistory(() {
       _layers.insert(0, copy);
       _selectedLayer = 0;
     });
@@ -643,7 +728,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       final layer = _layers.removeAt(_selectedLayer);
       _layers.insert(_selectedLayer - 1, layer);
       _selectedLayer--;
@@ -655,7 +740,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    setState(() {
+    _mutateWithHistory(() {
       final layer = _layers.removeAt(_selectedLayer);
       _layers.insert(_selectedLayer + 1, layer);
       _selectedLayer++;
@@ -663,19 +748,19 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
   }
 
   void _toggleVisibility(int index) {
-    setState(() {
+    _mutateWithHistory(() {
       _layers[index].visible = !_layers[index].visible;
     });
   }
 
   void _toggleLayerLock(int index) {
-    setState(() {
+    _mutateWithHistory(() {
       _layers[index].locked = !_layers[index].locked;
     });
   }
 
   void _addTextLayer() {
-    setState(() {
+    _mutateWithHistory(() {
       _layers.insert(
         0,
         CanvasLayer(
@@ -767,7 +852,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
 
     final pasted = _cloneLayer(copied);
 
-    setState(() {
+    _mutateWithHistory(() {
       _layers.insert(0, pasted);
       _selectedLayer = 0;
     });
@@ -791,6 +876,20 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
 
     if (ctrl && event.logicalKey == LogicalKeyboardKey.keyV) {
       _pasteCopied();
+      return;
+    }
+
+    if (ctrl && event.logicalKey == LogicalKeyboardKey.keyZ) {
+      if (shift) {
+        _redo();
+      } else {
+        _undo();
+      }
+      return;
+    }
+
+    if (ctrl && event.logicalKey == LogicalKeyboardKey.keyY) {
+      _redo();
       return;
     }
 
@@ -855,13 +954,15 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
                 icon: Icons.auto_fix_high_rounded,
                 name: 'Remove Background',
               ),
-              const ToolDefinition(
+              ToolDefinition(
                 icon: Icons.undo_rounded,
                 name: 'Undo',
+                onPressed: _undo,
               ),
-              const ToolDefinition(
+              ToolDefinition(
                 icon: Icons.redo_rounded,
                 name: 'Redo',
+                onPressed: _redo,
               ),
             ],
           ),
