@@ -316,6 +316,15 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
 
     setState(() {
       layer.rotation += delta * 0.01;
+
+      // Keep rotation normalized to one full turn.
+      while (layer.rotation > 3.141592653589793) {
+        layer.rotation -= 6.283185307179586;
+      }
+
+      while (layer.rotation < -3.141592653589793) {
+        layer.rotation += 6.283185307179586;
+      }
     });
   }
 
