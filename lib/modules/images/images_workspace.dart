@@ -30,6 +30,7 @@ class ImagesWorkspace extends StatefulWidget {
 }
 
 class _ImagesWorkspaceState extends State<ImagesWorkspace> {
+  CanvasLayer? _copiedLayer;
   final FocusNode _workspaceFocusNode = FocusNode();
 
   final List<CanvasLayer> _layers = [];
@@ -629,31 +630,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
-    final copy = CanvasLayer(
-      id: '${layer.id}-copy-${DateTime.now().microsecondsSinceEpoch}',
-      name: '${layer.name} Copy',
-      type: layer.type,
-      bytes: layer.bytes,
-      text: layer.text,
-      fontFamily: layer.fontFamily,
-      fontSize: layer.fontSize,
-      bold: layer.bold,
-      italic: layer.italic,
-      underline: layer.underline,
-      strikethrough: layer.strikethrough,
-      letterSpacing: layer.letterSpacing,
-      lineHeight: layer.lineHeight,
-      textColor: layer.textColor,
-      textAlignment: layer.textAlignment,
-      x: layer.x + 24,
-      y: layer.y + 24,
-      width: layer.width,
-      height: layer.height,
-      rotation: layer.rotation,
-      opacity: layer.opacity,
-      visible: layer.visible,
-      locked: false,
-    );
+    final copy = _cloneLayer(layer);
 
     setState(() {
       _layers.insert(0, copy);
@@ -733,12 +710,90 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     _moveSelected(delta);
   }
 
+  CanvasLayer _cloneLayer(
+    CanvasLayer layer, {
+    double offsetX = 24,
+    double offsetY = 24,
+  }) {
+    return CanvasLayer(
+      id: '${layer.id}-copy-${DateTime.now().microsecondsSinceEpoch}',
+      name: '${layer.name} Copy',
+      type: layer.type,
+      bytes: layer.bytes,
+      text: layer.text,
+      fontFamily: layer.fontFamily,
+      fontSize: layer.fontSize,
+      bold: layer.bold,
+      italic: layer.italic,
+      underline: layer.underline,
+      strikethrough: layer.strikethrough,
+      letterSpacing: layer.letterSpacing,
+      lineHeight: layer.lineHeight,
+      textColor: layer.textColor,
+      textAlignment: layer.textAlignment,
+      x: layer.x + offsetX,
+      y: layer.y + offsetY,
+      width: layer.width,
+      height: layer.height,
+      rotation: layer.rotation,
+      opacity: layer.opacity,
+      visible: layer.visible,
+      locked: false,
+    );
+  }
+
+  void _copySelected() {
+    final layer = _currentLayer;
+
+    if (layer == null) {
+      return;
+    }
+
+    setState(() {
+      _copiedLayer = _cloneLayer(
+        layer,
+        offsetX: 0,
+        offsetY: 0,
+      );
+    });
+  }
+
+  void _pasteCopied() {
+    final copied = _copiedLayer;
+
+    if (copied == null) {
+      return;
+    }
+
+    final pasted = _cloneLayer(copied);
+
+    setState(() {
+      _layers.insert(0, pasted);
+      _selectedLayer = 0;
+    });
+
+    _workspaceFocusNode.requestFocus();
+  }
+
   void _handleWorkspaceKey(KeyEvent event) {
     if (event is! KeyDownEvent) {
       return;
     }
 
-    final shift = HardwareKeyboard.instance.isShiftPressed;
+    final keyboard = HardwareKeyboard.instance;
+    final ctrl = keyboard.isControlPressed || keyboard.isMetaPressed;
+    final shift = keyboard.isShiftPressed;
+
+    if (ctrl && event.logicalKey == LogicalKeyboardKey.keyC) {
+      _copySelected();
+      return;
+    }
+
+    if (ctrl && event.logicalKey == LogicalKeyboardKey.keyV) {
+      _pasteCopied();
+      return;
+    }
+
     final step = shift ? 10.0 : 1.0;
 
     if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
