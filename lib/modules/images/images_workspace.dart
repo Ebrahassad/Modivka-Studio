@@ -99,9 +99,110 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
       return;
     }
 
+    const canvasWidth = 1200.0;
+    const canvasHeight = 800.0;
+    const snapDistance = 8.0;
+
+    double x = layer.x + delta.dx;
+    double y = layer.y + delta.dy;
+
+    final centerX = x + layer.width / 2;
+    final centerY = y + layer.height / 2;
+    final right = x + layer.width;
+    final bottom = y + layer.height;
+
+    double? snapX;
+    double? snapY;
+
+    void checkX(double value, double target) {
+      if ((value - target).abs() <= snapDistance) {
+        snapX = target;
+      }
+    }
+
+    void checkY(double value, double target) {
+      if ((value - target).abs() <= snapDistance) {
+        snapY = target;
+      }
+    }
+
+    // Canvas guides.
+    checkX(x, 0);
+    checkX(centerX, canvasWidth / 2);
+    checkX(right, canvasWidth);
+
+    checkY(y, 0);
+    checkY(centerY, canvasHeight / 2);
+    checkY(bottom, canvasHeight);
+
+    // Other visible layers.
+    for (var i = 0; i < _layers.length; i++) {
+      if (i == _selectedLayer) {
+        continue;
+      }
+
+      final other = _layers[i];
+
+      if (!other.visible) {
+        continue;
+      }
+
+      final otherLeft = other.x;
+      final otherCenterX = other.x + other.width / 2;
+      final otherRight = other.x + other.width;
+
+      final otherTop = other.y;
+      final otherCenterY = other.y + other.height / 2;
+      final otherBottom = other.y + other.height;
+
+      checkX(x, otherLeft);
+      checkX(x, otherCenterX);
+      checkX(x, otherRight);
+
+      checkX(centerX, otherLeft);
+      checkX(centerX, otherCenterX);
+      checkX(centerX, otherRight);
+
+      checkX(right, otherLeft);
+      checkX(right, otherCenterX);
+      checkX(right, otherRight);
+
+      checkY(y, otherTop);
+      checkY(y, otherCenterY);
+      checkY(y, otherBottom);
+
+      checkY(centerY, otherTop);
+      checkY(centerY, otherCenterY);
+      checkY(centerY, otherBottom);
+
+      checkY(bottom, otherTop);
+      checkY(bottom, otherCenterY);
+      checkY(bottom, otherBottom);
+    }
+
+    if (snapX != null) {
+      if ((x - snapX!).abs() <= snapDistance) {
+        x = snapX!;
+      } else if ((centerX - snapX!).abs() <= snapDistance) {
+        x = snapX! - layer.width / 2;
+      } else if ((right - snapX!).abs() <= snapDistance) {
+        x = snapX! - layer.width;
+      }
+    }
+
+    if (snapY != null) {
+      if ((y - snapY!).abs() <= snapDistance) {
+        y = snapY!;
+      } else if ((centerY - snapY!).abs() <= snapDistance) {
+        y = snapY! - layer.height / 2;
+      } else if ((bottom - snapY!).abs() <= snapDistance) {
+        y = snapY! - layer.height;
+      }
+    }
+
     setState(() {
-      layer.x += delta.dx;
-      layer.y += delta.dy;
+      layer.x = x;
+      layer.y = y;
     });
   }
 
