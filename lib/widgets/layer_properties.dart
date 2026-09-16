@@ -19,6 +19,8 @@ class LayerProperties extends StatelessWidget {
   final ValueChanged<double>? onFontSizeChanged;
   final ValueChanged<bool>? onBoldChanged;
   final ValueChanged<bool>? onItalicChanged;
+  final ValueChanged<double>? onLetterSpacingChanged;
+  final ValueChanged<double>? onLineHeightChanged;
   final ValueChanged<ColorValue>? onTextColorChanged;
   final ValueChanged<TextAlignment>? onTextAlignmentChanged;
 
@@ -40,6 +42,8 @@ class LayerProperties extends StatelessWidget {
     this.onFontSizeChanged,
     this.onBoldChanged,
     this.onItalicChanged,
+    this.onLetterSpacingChanged,
+    this.onLineHeightChanged,
     this.onTextColorChanged,
     this.onTextAlignmentChanged,
   });
@@ -150,6 +154,16 @@ class LayerProperties extends StatelessWidget {
                     title: const Text('Italic'),
                     value: current.italic,
                     onChanged: onItalicChanged,
+                  ),
+                  _numberField(
+                    label: 'Letter Spacing',
+                    value: current.letterSpacing,
+                    onChanged: onLetterSpacingChanged ?? (_) {},
+                  ),
+                  _numberField(
+                    label: 'Line Height',
+                    value: current.lineHeight,
+                    onChanged: onLineHeightChanged ?? (_) {},
                   ),
                   const SizedBox(height: 4),
                   const Text(

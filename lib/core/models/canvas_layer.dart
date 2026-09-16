@@ -37,6 +37,8 @@ class CanvasLayer {
   double fontSize;
   bool bold;
   bool italic;
+  double letterSpacing;
+  double lineHeight;
   ColorValue textColor;
   TextAlignment textAlignment;
 
@@ -60,6 +62,8 @@ class CanvasLayer {
     this.fontSize = 32,
     this.bold = false,
     this.italic = false,
+    this.letterSpacing = 0,
+    this.lineHeight = 1.2,
     this.textColor = const ColorValue(255, 255, 255),
     this.textAlignment = TextAlignment.left,
     this.x = 0,

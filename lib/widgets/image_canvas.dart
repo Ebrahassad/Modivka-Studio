@@ -266,6 +266,8 @@ class _LayerContent extends StatelessWidget {
             fontWeight: layer.bold ? FontWeight.w700 : FontWeight.w400,
             fontStyle: layer.italic ? FontStyle.italic : FontStyle.normal,
             fontFamily: layer.fontFamily,
+            letterSpacing: layer.letterSpacing,
+            height: layer.lineHeight,
           ),
         ),
       );

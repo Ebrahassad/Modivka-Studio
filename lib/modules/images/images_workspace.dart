@@ -267,6 +267,30 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     });
   }
 
+  void _setLetterSpacing(double value) {
+    final layer = _currentLayer;
+
+    if (layer == null || layer.type != LayerType.text || layer.locked) {
+      return;
+    }
+
+    setState(() {
+      layer.letterSpacing = value.clamp(-10.0, 50.0);
+    });
+  }
+
+  void _setLineHeight(double value) {
+    final layer = _currentLayer;
+
+    if (layer == null || layer.type != LayerType.text || layer.locked) {
+      return;
+    }
+
+    setState(() {
+      layer.lineHeight = value.clamp(0.5, 3.0);
+    });
+  }
+
   void _setTextColor(ColorValue value) {
     final layer = _currentLayer;
     if (layer == null || layer.type != LayerType.text || layer.locked) {
@@ -507,6 +531,8 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
                 onFontSizeChanged: _setFontSize,
                 onBoldChanged: _setBold,
                 onItalicChanged: _setItalic,
+                onLetterSpacingChanged: _setLetterSpacing,
+                onLineHeightChanged: _setLineHeight,
                 onTextColorChanged: _setTextColor,
                 onTextAlignmentChanged: _setTextAlignment,
               ),
