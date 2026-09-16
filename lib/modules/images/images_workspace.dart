@@ -391,6 +391,64 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     });
   }
 
+  void _distributeHorizontal() {
+    final movable =
+        _layers.where((layer) => layer.visible && !layer.locked).toList();
+
+    if (movable.length < 3) {
+      return;
+    }
+
+    movable.sort((a, b) => a.x.compareTo(b.x));
+
+    final first = movable.first;
+    final last = movable.last;
+
+    final start = first.x;
+    final end = last.x + last.width;
+    final totalWidth =
+        movable.fold<double>(0, (sum, layer) => sum + layer.width);
+    final gap = (end - start - totalWidth) / (movable.length - 1);
+
+    setState(() {
+      double x = start;
+
+      for (final layer in movable) {
+        layer.x = x;
+        x += layer.width + gap;
+      }
+    });
+  }
+
+  void _distributeVertical() {
+    final movable =
+        _layers.where((layer) => layer.visible && !layer.locked).toList();
+
+    if (movable.length < 3) {
+      return;
+    }
+
+    movable.sort((a, b) => a.y.compareTo(b.y));
+
+    final first = movable.first;
+    final last = movable.last;
+
+    final start = first.y;
+    final end = last.y + last.height;
+    final totalHeight =
+        movable.fold<double>(0, (sum, layer) => sum + layer.height);
+    final gap = (end - start - totalHeight) / (movable.length - 1);
+
+    setState(() {
+      double y = start;
+
+      for (final layer in movable) {
+        layer.y = y;
+        y += layer.height + gap;
+      }
+    });
+  }
+
   void _toggleLock(bool value) {
     final layer = _currentLayer;
 
@@ -621,6 +679,8 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
                 onAlignTop: _alignTop,
                 onAlignCenterVertical: _alignCenterVertical,
                 onAlignBottom: _alignBottom,
+                onDistributeHorizontal: _distributeHorizontal,
+                onDistributeVertical: _distributeVertical,
               ),
             ],
           ),

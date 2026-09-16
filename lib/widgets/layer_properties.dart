@@ -31,6 +31,8 @@ class LayerProperties extends StatelessWidget {
   final VoidCallback? onAlignTop;
   final VoidCallback? onAlignCenterVertical;
   final VoidCallback? onAlignBottom;
+  final VoidCallback? onDistributeHorizontal;
+  final VoidCallback? onDistributeVertical;
 
   const LayerProperties({
     super.key,
@@ -62,6 +64,8 @@ class LayerProperties extends StatelessWidget {
     this.onAlignTop,
     this.onAlignCenterVertical,
     this.onAlignBottom,
+    this.onDistributeHorizontal,
+    this.onDistributeVertical,
   });
 
   @override
@@ -341,6 +345,41 @@ class LayerProperties extends StatelessWidget {
                         icon: const Icon(
                           Icons.align_vertical_bottom_rounded,
                         ),
+                      ),
+                    ),
+                  ],
+                ),
+                const Divider(),
+                const Text(
+                  'Distribute Layers',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed:
+                            current.locked ? null : onDistributeHorizontal,
+                        icon: const Icon(
+                          Icons.space_bar_rounded,
+                          size: 18,
+                        ),
+                        label: const Text('Horizontal'),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: current.locked ? null : onDistributeVertical,
+                        icon: const Icon(
+                          Icons.height_rounded,
+                          size: 18,
+                        ),
+                        label: const Text('Vertical'),
                       ),
                     ),
                   ],
