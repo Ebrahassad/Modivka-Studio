@@ -182,6 +182,13 @@ class LayerProperties extends StatelessWidget {
                             onTextAlignmentChanged!(selection.first);
                           },
                   ),
+                  const SizedBox(height: 12),
+                  _colorField(
+                    context,
+                    label: 'Text Color',
+                    value: current.textColor,
+                    onChanged: onTextColorChanged,
+                  ),
                   const SizedBox(height: 14),
                 ],
                 _numberField(
@@ -269,6 +276,85 @@ class LayerProperties extends StatelessWidget {
     );
   }
 
+  Widget _colorField(
+    BuildContext context, {
+    required String label,
+    required ColorValue value,
+    required ValueChanged<ColorValue>? onChanged,
+  }) {
+    final color = Color(value.value);
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onChanged == null
+          ? null
+          : () async {
+              final result = await showDialog<ColorValue>(
+                context: context,
+                builder: (dialogContext) {
+                  return _TextColorDialog(
+                    initialColor: value,
+                  );
+                },
+              );
+
+              if (result != null) {
+                onChanged(result);
+              }
+            },
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Colors.white.withAlpha(35),
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(7),
+                border: Border.all(
+                  color: Colors.white.withAlpha(55),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Text(
+              '#${value.red.toRadixString(16).padLeft(2, '0').toUpperCase()}'
+              '${value.green.toRadixString(16).padLeft(2, '0').toUpperCase()}'
+              '${value.blue.toRadixString(16).padLeft(2, '0').toUpperCase()}',
+              style: const TextStyle(
+                color: Colors.white60,
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _numberField({
     required String label,
     required double value,
@@ -295,6 +381,138 @@ class LayerProperties extends StatelessWidget {
           }
         },
       ),
+    );
+  }
+}
+
+class _TextColorDialog extends StatefulWidget {
+  final ColorValue initialColor;
+
+  const _TextColorDialog({
+    required this.initialColor,
+  });
+
+  @override
+  State<_TextColorDialog> createState() => _TextColorDialogState();
+}
+
+class _TextColorDialogState extends State<_TextColorDialog> {
+  late double red;
+  late double green;
+  late double blue;
+
+  @override
+  void initState() {
+    super.initState();
+    red = widget.initialColor.red.toDouble();
+    green = widget.initialColor.green.toDouble();
+    blue = widget.initialColor.blue.toDouble();
+  }
+
+  ColorValue get colorValue => ColorValue(
+        red.round(),
+        green.round(),
+        blue.round(),
+      );
+
+  Color get color => Color(colorValue.value);
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Text Color'),
+      content: SizedBox(
+        width: 320,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: double.infinity,
+              height: 72,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: Colors.white.withAlpha(45),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _channelSlider(
+              label: 'Red',
+              value: red,
+              onChanged: (value) {
+                setState(() => red = value);
+              },
+            ),
+            _channelSlider(
+              label: 'Green',
+              value: green,
+              onChanged: (value) {
+                setState(() => green = value);
+              },
+            ),
+            _channelSlider(
+              label: 'Blue',
+              value: blue,
+              onChanged: (value) {
+                setState(() => blue = value);
+              },
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '#${colorValue.red.toRadixString(16).padLeft(2, '0').toUpperCase()}'
+              '${colorValue.green.toRadixString(16).padLeft(2, '0').toUpperCase()}'
+              '${colorValue.blue.toRadixString(16).padLeft(2, '0').toUpperCase()}',
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () {
+            Navigator.of(context).pop(colorValue);
+          },
+          child: const Text('Apply'),
+        ),
+      ],
+    );
+  }
+
+  Widget _channelSlider({
+    required String label,
+    required double value,
+    required ValueChanged<double> onChanged,
+  }) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 48,
+          child: Text(label),
+        ),
+        Expanded(
+          child: Slider(
+            min: 0,
+            max: 255,
+            value: value,
+            onChanged: onChanged,
+          ),
+        ),
+        SizedBox(
+          width: 34,
+          child: Text(
+            value.round().toString(),
+            textAlign: TextAlign.right,
+          ),
+        ),
+      ],
     );
   }
 }
