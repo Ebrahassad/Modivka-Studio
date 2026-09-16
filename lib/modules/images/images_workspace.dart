@@ -251,6 +251,34 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     });
   }
 
+  void _duplicateSelected() {
+    if (_selectedLayer < 0 || _selectedLayer >= _layers.length) {
+      return;
+    }
+
+    final source = _layers[_selectedLayer];
+
+    final duplicate = CanvasLayer(
+      id: 'layer-${DateTime.now().microsecondsSinceEpoch}',
+      name: '${source.name} Copy',
+      type: source.type,
+      bytes: source.bytes,
+      text: source.text,
+      x: source.x + 24,
+      y: source.y + 24,
+      width: source.width,
+      height: source.height,
+      rotation: source.rotation,
+      opacity: source.opacity,
+      visible: source.visible,
+      locked: false,
+    );
+
+    setState(() {
+      _layers.insert(_selectedLayer, duplicate);
+    });
+  }
+
   void _moveUp() {
     if (_selectedLayer <= 0) {
       return;
@@ -389,6 +417,11 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
                 },
                 onVisibilityChanged: _toggleVisibility,
                 onLockChanged: _toggleLayerLock,
+                onAdd: _addTextLayer,
+                onDelete: _deleteSelected,
+                onDuplicate: _duplicateSelected,
+                onMoveUp: _moveUp,
+                onMoveDown: _moveDown,
               ),
               LayerProperties(
                 layer: _currentLayer,
