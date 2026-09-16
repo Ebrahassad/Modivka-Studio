@@ -103,6 +103,10 @@ class _CanvasSurface extends StatelessWidget {
   final ValueChanged<Offset> onResize;
   final ValueChanged<double> onRotate;
 
+  static const double canvasWidth = 1200;
+  static const double canvasHeight = 800;
+  static const double guideThreshold = 8;
+
   const _CanvasSurface({
     required this.layers,
     required this.selectedIndex,
@@ -159,9 +163,210 @@ class _CanvasSurface extends StatelessWidget {
               onResize: onResize,
               onRotate: onRotate,
             ),
+          if (selectedIndex >= 0 && selectedIndex < layers.length)
+            _SmartGuides(
+              layer: layers[selectedIndex],
+              layers: layers,
+              selectedIndex: selectedIndex,
+              canvasWidth: canvasWidth,
+              canvasHeight: canvasHeight,
+              threshold: guideThreshold,
+            ),
         ],
       ),
     );
+  }
+}
+
+class _SmartGuides extends StatelessWidget {
+  final CanvasLayer layer;
+  final List<CanvasLayer> layers;
+  final int selectedIndex;
+  final double canvasWidth;
+  final double canvasHeight;
+  final double threshold;
+
+  const _SmartGuides({
+    required this.layer,
+    required this.layers,
+    required this.selectedIndex,
+    required this.canvasWidth,
+    required this.canvasHeight,
+    required this.threshold,
+  });
+
+  bool _near(double a, double b) => (a - b).abs() <= threshold;
+
+  @override
+  Widget build(BuildContext context) {
+    final guides = <_GuideLine>[];
+
+    final left = layer.x;
+    final right = layer.x + layer.width;
+    final top = layer.y;
+    final bottom = layer.y + layer.height;
+    final centerX = layer.x + layer.width / 2;
+    final centerY = layer.y + layer.height / 2;
+
+    if (_near(centerX, canvasWidth / 2)) {
+      guides.add(
+        _GuideLine.vertical(canvasWidth / 2),
+      );
+    }
+
+    if (_near(centerY, canvasHeight / 2)) {
+      guides.add(
+        _GuideLine.horizontal(canvasHeight / 2),
+      );
+    }
+
+    if (_near(left, 0)) {
+      guides.add(_GuideLine.vertical(0));
+    }
+
+    if (_near(right, canvasWidth)) {
+      guides.add(_GuideLine.vertical(canvasWidth));
+    }
+
+    if (_near(top, 0)) {
+      guides.add(_GuideLine.horizontal(0));
+    }
+
+    if (_near(bottom, canvasHeight)) {
+      guides.add(_GuideLine.horizontal(canvasHeight));
+    }
+
+    for (var i = 0; i < layers.length; i++) {
+      if (i == selectedIndex) {
+        continue;
+      }
+
+      final other = layers[i];
+
+      if (!other.visible) {
+        continue;
+      }
+
+      final otherLeft = other.x;
+      final otherRight = other.x + other.width;
+      final otherTop = other.y;
+      final otherBottom = other.y + other.height;
+      final otherCenterX = other.x + other.width / 2;
+      final otherCenterY = other.y + other.height / 2;
+
+      final xTargets = [
+        otherLeft,
+        otherCenterX,
+        otherRight,
+      ];
+
+      final yTargets = [
+        otherTop,
+        otherCenterY,
+        otherBottom,
+      ];
+
+      final xValues = [
+        left,
+        centerX,
+        right,
+      ];
+
+      final yValues = [
+        top,
+        centerY,
+        bottom,
+      ];
+
+      for (final x in xValues) {
+        for (final target in xTargets) {
+          if (_near(x, target)) {
+            guides.add(_GuideLine.vertical(target));
+            break;
+          }
+        }
+      }
+
+      for (final y in yValues) {
+        for (final target in yTargets) {
+          if (_near(y, target)) {
+            guides.add(_GuideLine.horizontal(target));
+            break;
+          }
+        }
+      }
+    }
+
+    if (guides.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: CustomPaint(
+          painter: _SmartGuidePainter(
+            guides: guides,
+            width: canvasWidth,
+            height: canvasHeight,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GuideLine {
+  final Axis axis;
+  final double position;
+
+  const _GuideLine.vertical(this.position) : axis = Axis.vertical;
+
+  const _GuideLine.horizontal(this.position) : axis = Axis.horizontal;
+}
+
+class _SmartGuidePainter extends CustomPainter {
+  final List<_GuideLine> guides;
+  final double width;
+  final double height;
+
+  const _SmartGuidePainter({
+    required this.guides,
+    required this.width,
+    required this.height,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFE53935)
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    for (final guide in guides) {
+      if (guide.axis == Axis.vertical) {
+        canvas.drawLine(
+          Offset(guide.position, 0),
+          Offset(guide.position, height),
+          paint,
+        );
+      } else {
+        canvas.drawLine(
+          Offset(0, guide.position),
+          Offset(width, guide.position),
+          paint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SmartGuidePainter oldDelegate) {
+    return oldDelegate.guides.length != guides.length ||
+        oldDelegate.guides.any(
+          (guide) {
+            return !oldDelegate.guides.contains(guide);
+          },
+        );
   }
 }
 
