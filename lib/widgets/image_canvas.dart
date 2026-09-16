@@ -125,6 +125,30 @@ class _CanvasSurface extends StatelessWidget {
               painter: _CanvasBackgroundPainter(),
             ),
           ),
+          Positioned(
+            left: 0,
+            top: 0,
+            child: IgnorePointer(
+              child: Container(
+                width: 1200,
+                height: 800,
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  border: Border.all(
+                    color: const Color(0xFF8A8F98),
+                    width: 1.5,
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black54,
+                      blurRadius: 24,
+                      spreadRadius: 4,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
           for (var i = 0; i < layers.length; i++)
             _LayerWidget(
               key: ValueKey(layers[i].id),
