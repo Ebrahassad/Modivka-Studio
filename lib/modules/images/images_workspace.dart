@@ -252,30 +252,31 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
   }
 
   void _duplicateSelected() {
-    if (_selectedLayer < 0 || _selectedLayer >= _layers.length) {
+    final layer = _currentLayer;
+
+    if (layer == null) {
       return;
     }
 
-    final source = _layers[_selectedLayer];
-
-    final duplicate = CanvasLayer(
-      id: 'layer-${DateTime.now().microsecondsSinceEpoch}',
-      name: '${source.name} Copy',
-      type: source.type,
-      bytes: source.bytes,
-      text: source.text,
-      x: source.x + 24,
-      y: source.y + 24,
-      width: source.width,
-      height: source.height,
-      rotation: source.rotation,
-      opacity: source.opacity,
-      visible: source.visible,
+    final copy = CanvasLayer(
+      id: '${layer.id}-copy-${DateTime.now().microsecondsSinceEpoch}',
+      name: '${layer.name} Copy',
+      type: layer.type,
+      bytes: layer.bytes,
+      text: layer.text,
+      x: layer.x + 24,
+      y: layer.y + 24,
+      width: layer.width,
+      height: layer.height,
+      rotation: layer.rotation,
+      opacity: layer.opacity,
+      visible: layer.visible,
       locked: false,
     );
 
     setState(() {
-      _layers.insert(_selectedLayer, duplicate);
+      _layers.insert(0, copy);
+      _selectedLayer = 0;
     });
   }
 
