@@ -400,6 +400,25 @@ class _LayerWidget extends StatelessWidget {
       child: _LayerContent(layer: layer),
     );
 
+    final selectionBorder = selected
+        ? DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: const Color(0xFF5B8CFF),
+                width: 2,
+              ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x665B8CFF),
+                  blurRadius: 8,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: content,
+          )
+        : content;
+
     return Positioned(
       left: layer.x,
       top: layer.y,
@@ -417,7 +436,7 @@ class _LayerWidget extends StatelessWidget {
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              content,
+              selectionBorder,
               if (selected)
                 Positioned.fill(
                   child: IgnorePointer(
