@@ -255,11 +255,17 @@ class _LayerContent extends StatelessWidget {
         ),
         child: Text(
           layer.text.isEmpty ? layer.name : layer.text,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 32,
-            fontWeight: FontWeight.w600,
+          textAlign: switch (layer.textAlignment) {
+            TextAlignment.left => TextAlign.left,
+            TextAlignment.center => TextAlign.center,
+            TextAlignment.right => TextAlign.right,
+          },
+          style: TextStyle(
+            color: Color(layer.textColor.value),
+            fontSize: layer.fontSize,
+            fontWeight: layer.bold ? FontWeight.w700 : FontWeight.w400,
+            fontStyle: layer.italic ? FontStyle.italic : FontStyle.normal,
+            fontFamily: layer.fontFamily,
           ),
         ),
       );

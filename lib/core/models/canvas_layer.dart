@@ -1,5 +1,25 @@
 import 'dart:typed_data';
 
+class ColorValue {
+  final int red;
+  final int green;
+  final int blue;
+
+  const ColorValue(this.red, this.green, this.blue);
+
+  int get value =>
+      (0xFF << 24) |
+      ((red & 0xFF) << 16) |
+      ((green & 0xFF) << 8) |
+      (blue & 0xFF);
+}
+
+enum TextAlignment {
+  left,
+  center,
+  right,
+}
+
 enum LayerType {
   image,
   text,
@@ -12,6 +32,13 @@ class CanvasLayer {
   final Uint8List? bytes;
 
   String text;
+
+  String fontFamily;
+  double fontSize;
+  bool bold;
+  bool italic;
+  ColorValue textColor;
+  TextAlignment textAlignment;
 
   double x;
   double y;
@@ -29,6 +56,12 @@ class CanvasLayer {
     required this.type,
     this.bytes,
     this.text = '',
+    this.fontFamily = 'Roboto',
+    this.fontSize = 32,
+    this.bold = false,
+    this.italic = false,
+    this.textColor = const ColorValue(255, 255, 255),
+    this.textAlignment = TextAlignment.left,
     this.x = 0,
     this.y = 0,
     this.width = 300,
