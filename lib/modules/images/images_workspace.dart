@@ -284,8 +284,22 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     }
 
     setState(() {
-      layer.width = (layer.width + delta.dx).clamp(40.0, 2000.0);
-      layer.height = (layer.height + delta.dy).clamp(40.0, 2000.0);
+      final newWidth = (layer.width + delta.dx).clamp(40.0, 2000.0);
+      final newHeight = (layer.height + delta.dy).clamp(40.0, 2000.0);
+
+      // Do not resize beyond the right/bottom edges of the canvas.
+      final maxWidth = 1200.0 - layer.x;
+      final maxHeight = 800.0 - layer.y;
+
+      layer.width = newWidth.clamp(
+        40.0,
+        maxWidth < 40.0 ? 40.0 : maxWidth,
+      );
+
+      layer.height = newHeight.clamp(
+        40.0,
+        maxHeight < 40.0 ? 40.0 : maxHeight,
+      );
     });
   }
 
