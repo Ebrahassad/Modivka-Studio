@@ -223,6 +223,72 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     });
   }
 
+  void _setFontFamily(String value) {
+    final layer = _currentLayer;
+    if (layer == null || layer.type != LayerType.text || layer.locked) {
+      return;
+    }
+
+    setState(() {
+      layer.fontFamily = value;
+    });
+  }
+
+  void _setFontSize(double value) {
+    final layer = _currentLayer;
+    if (layer == null || layer.type != LayerType.text || layer.locked) {
+      return;
+    }
+
+    setState(() {
+      layer.fontSize = value.clamp(6.0, 300.0);
+    });
+  }
+
+  void _setBold(bool value) {
+    final layer = _currentLayer;
+    if (layer == null || layer.type != LayerType.text || layer.locked) {
+      return;
+    }
+
+    setState(() {
+      layer.bold = value;
+    });
+  }
+
+  void _setItalic(bool value) {
+    final layer = _currentLayer;
+    if (layer == null || layer.type != LayerType.text || layer.locked) {
+      return;
+    }
+
+    setState(() {
+      layer.italic = value;
+    });
+  }
+
+  void _setTextColor(ColorValue value) {
+    final layer = _currentLayer;
+    if (layer == null || layer.type != LayerType.text || layer.locked) {
+      return;
+    }
+
+    setState(() {
+      layer.textColor = value;
+    });
+  }
+
+  void _setTextAlignment(TextAlignment value) {
+    final layer = _currentLayer;
+    if (layer == null || layer.type != LayerType.text || layer.locked) {
+      return;
+    }
+
+    setState(() {
+      layer.textAlignment = value;
+    });
+  }
+
   void _toggleLock(bool value) {
     final layer = _currentLayer;
 
@@ -437,6 +503,12 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
                 onOpacityChanged: _setOpacity,
                 onLockChanged: _toggleLock,
                 onTextChanged: _setText,
+                onFontFamilyChanged: _setFontFamily,
+                onFontSizeChanged: _setFontSize,
+                onBoldChanged: _setBold,
+                onItalicChanged: _setItalic,
+                onTextColorChanged: _setTextColor,
+                onTextAlignmentChanged: _setTextAlignment,
               ),
             ],
           ),

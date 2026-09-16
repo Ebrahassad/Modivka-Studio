@@ -15,6 +15,12 @@ class LayerProperties extends StatelessWidget {
   final ValueChanged<double> onOpacityChanged;
   final ValueChanged<bool> onLockChanged;
   final ValueChanged<String> onTextChanged;
+  final ValueChanged<String>? onFontFamilyChanged;
+  final ValueChanged<double>? onFontSizeChanged;
+  final ValueChanged<bool>? onBoldChanged;
+  final ValueChanged<bool>? onItalicChanged;
+  final ValueChanged<ColorValue>? onTextColorChanged;
+  final ValueChanged<TextAlignment>? onTextAlignmentChanged;
 
   const LayerProperties({
     super.key,
@@ -30,6 +36,12 @@ class LayerProperties extends StatelessWidget {
     required this.onOpacityChanged,
     required this.onLockChanged,
     required this.onTextChanged,
+    this.onFontFamilyChanged,
+    this.onFontSizeChanged,
+    this.onBoldChanged,
+    this.onItalicChanged,
+    this.onTextColorChanged,
+    this.onTextAlignmentChanged,
   });
 
   @override
@@ -86,6 +98,89 @@ class LayerProperties extends StatelessWidget {
                       border: OutlineInputBorder(),
                     ),
                     onChanged: onTextChanged,
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: current.fontFamily,
+                    decoration: const InputDecoration(
+                      labelText: 'Font',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'Roboto',
+                        child: Text('Roboto'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'sans-serif',
+                        child: Text('Sans Serif'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'serif',
+                        child: Text('Serif'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'monospace',
+                        child: Text('Monospace'),
+                      ),
+                    ],
+                    onChanged: onFontFamilyChanged == null
+                        ? null
+                        : (value) {
+                            if (value != null) {
+                              onFontFamilyChanged!(value);
+                            }
+                          },
+                  ),
+                  const SizedBox(height: 10),
+                  _numberField(
+                    label: 'Font Size',
+                    value: current.fontSize,
+                    onChanged: onFontSizeChanged ?? (_) {},
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Bold'),
+                    value: current.bold,
+                    onChanged: onBoldChanged,
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Italic'),
+                    value: current.italic,
+                    onChanged: onItalicChanged,
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Text Alignment',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  SegmentedButton<TextAlignment>(
+                    segments: const [
+                      ButtonSegment(
+                        value: TextAlignment.left,
+                        icon: Icon(Icons.format_align_left_rounded),
+                      ),
+                      ButtonSegment(
+                        value: TextAlignment.center,
+                        icon: Icon(Icons.format_align_center_rounded),
+                      ),
+                      ButtonSegment(
+                        value: TextAlignment.right,
+                        icon: Icon(Icons.format_align_right_rounded),
+                      ),
+                    ],
+                    selected: {current.textAlignment},
+                    onSelectionChanged: onTextAlignmentChanged == null
+                        ? null
+                        : (selection) {
+                            onTextAlignmentChanged!(selection.first);
+                          },
                   ),
                   const SizedBox(height: 14),
                 ],
