@@ -106,6 +106,24 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     double x = layer.x + delta.dx;
     double y = layer.y + delta.dy;
 
+    // Keep the layer inside the workspace.
+    // A small portion may touch the edge, but the layer cannot
+    // be moved completely outside the 1200 x 800 canvas.
+    final maxX = canvasWidth - layer.width;
+    final maxY = canvasHeight - layer.height;
+
+    if (maxX >= 0) {
+      x = x.clamp(0.0, maxX);
+    } else {
+      x = 0.0;
+    }
+
+    if (maxY >= 0) {
+      y = y.clamp(0.0, maxY);
+    } else {
+      y = 0.0;
+    }
+
     final centerX = x + layer.width / 2;
     final centerY = y + layer.height / 2;
     final right = x + layer.width;
