@@ -337,6 +337,60 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     });
   }
 
+  void _alignLeft() {
+    final layer = _currentLayer;
+    if (layer == null || layer.locked) return;
+
+    setState(() {
+      layer.x = 0;
+    });
+  }
+
+  void _alignCenterHorizontal() {
+    final layer = _currentLayer;
+    if (layer == null || layer.locked) return;
+
+    setState(() {
+      layer.x = (1200 - layer.width) / 2;
+    });
+  }
+
+  void _alignRight() {
+    final layer = _currentLayer;
+    if (layer == null || layer.locked) return;
+
+    setState(() {
+      layer.x = 1200 - layer.width;
+    });
+  }
+
+  void _alignTop() {
+    final layer = _currentLayer;
+    if (layer == null || layer.locked) return;
+
+    setState(() {
+      layer.y = 0;
+    });
+  }
+
+  void _alignCenterVertical() {
+    final layer = _currentLayer;
+    if (layer == null || layer.locked) return;
+
+    setState(() {
+      layer.y = (800 - layer.height) / 2;
+    });
+  }
+
+  void _alignBottom() {
+    final layer = _currentLayer;
+    if (layer == null || layer.locked) return;
+
+    setState(() {
+      layer.y = 800 - layer.height;
+    });
+  }
+
   void _toggleLock(bool value) {
     final layer = _currentLayer;
 
@@ -561,6 +615,12 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
                 onLineHeightChanged: _setLineHeight,
                 onTextColorChanged: _setTextColor,
                 onTextAlignmentChanged: _setTextAlignment,
+                onAlignLeft: _alignLeft,
+                onAlignCenterHorizontal: _alignCenterHorizontal,
+                onAlignRight: _alignRight,
+                onAlignTop: _alignTop,
+                onAlignCenterVertical: _alignCenterVertical,
+                onAlignBottom: _alignBottom,
               ),
             ],
           ),

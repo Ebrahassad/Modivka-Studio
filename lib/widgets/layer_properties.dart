@@ -25,6 +25,12 @@ class LayerProperties extends StatelessWidget {
   final ValueChanged<double>? onLineHeightChanged;
   final ValueChanged<ColorValue>? onTextColorChanged;
   final ValueChanged<TextAlignment>? onTextAlignmentChanged;
+  final VoidCallback? onAlignLeft;
+  final VoidCallback? onAlignCenterHorizontal;
+  final VoidCallback? onAlignRight;
+  final VoidCallback? onAlignTop;
+  final VoidCallback? onAlignCenterVertical;
+  final VoidCallback? onAlignBottom;
 
   const LayerProperties({
     super.key,
@@ -50,6 +56,12 @@ class LayerProperties extends StatelessWidget {
     this.onLineHeightChanged,
     this.onTextColorChanged,
     this.onTextAlignmentChanged,
+    this.onAlignLeft,
+    this.onAlignCenterHorizontal,
+    this.onAlignRight,
+    this.onAlignTop,
+    this.onAlignCenterVertical,
+    this.onAlignBottom,
   });
 
   @override
@@ -263,6 +275,75 @@ class LayerProperties extends StatelessWidget {
                   title: const Text('Lock'),
                   value: current.locked,
                   onChanged: onLockChanged,
+                ),
+                const Divider(),
+                const Text(
+                  'Align Layer',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: IconButton(
+                        tooltip: 'Align left',
+                        onPressed: current.locked ? null : onAlignLeft,
+                        icon: const Icon(Icons.align_horizontal_left_rounded),
+                      ),
+                    ),
+                    Expanded(
+                      child: IconButton(
+                        tooltip: 'Center horizontally',
+                        onPressed:
+                            current.locked ? null : onAlignCenterHorizontal,
+                        icon: const Icon(
+                          Icons.align_horizontal_center_rounded,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: IconButton(
+                        tooltip: 'Align right',
+                        onPressed: current.locked ? null : onAlignRight,
+                        icon: const Icon(
+                          Icons.align_horizontal_right_rounded,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: IconButton(
+                        tooltip: 'Align top',
+                        onPressed: current.locked ? null : onAlignTop,
+                        icon: const Icon(Icons.align_vertical_top_rounded),
+                      ),
+                    ),
+                    Expanded(
+                      child: IconButton(
+                        tooltip: 'Center vertically',
+                        onPressed:
+                            current.locked ? null : onAlignCenterVertical,
+                        icon: const Icon(
+                          Icons.align_vertical_center_rounded,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: IconButton(
+                        tooltip: 'Align bottom',
+                        onPressed: current.locked ? null : onAlignBottom,
+                        icon: const Icon(
+                          Icons.align_vertical_bottom_rounded,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const Divider(),
                 Row(
