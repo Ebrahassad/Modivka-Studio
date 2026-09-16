@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/models/canvas_layer.dart';
 import '../../core/models/workspace_item.dart';
@@ -29,6 +30,8 @@ class ImagesWorkspace extends StatefulWidget {
 }
 
 class _ImagesWorkspaceState extends State<ImagesWorkspace> {
+  final FocusNode _workspaceFocusNode = FocusNode();
+
   final List<CanvasLayer> _layers = [];
   int _selectedLayer = -1;
 
@@ -705,65 +708,120 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
   }
 
   @override
+  void dispose() {
+    _workspaceFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _nudgeSelected(Offset delta) {
+    final layer = _currentLayer;
+
+    if (layer == null || layer.locked) {
+      return;
+    }
+
+    _moveSelected(delta);
+  }
+
+  void _handleWorkspaceKey(KeyEvent event) {
+    if (event is! KeyDownEvent) {
+      return;
+    }
+
+    final shift = HardwareKeyboard.instance.isShiftPressed;
+    final step = shift ? 10.0 : 1.0;
+
+    if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      _nudgeSelected(Offset(-step, 0));
+    } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      _nudgeSelected(Offset(step, 0));
+    } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+      _nudgeSelected(Offset(0, -step));
+    } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+      _nudgeSelected(Offset(0, step));
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        ModivkaToolBar(
-          tools: [
-            ToolDefinition(
-              icon: Icons.add_photo_alternate_outlined,
-              name: 'Add Image',
-              onPressed: widget.onAddImage,
-            ),
-            ToolDefinition(
-              icon: Icons.layers_outlined,
-              name: 'Add Image Layer',
-              onPressed: widget.onAddLayer,
-            ),
-            ToolDefinition(
-              icon: Icons.text_fields_rounded,
-              name: 'Add Text Layer',
-              onPressed: _addTextLayer,
-            ),
-            const ToolDefinition(
-              icon: Icons.content_cut_rounded,
-              name: 'Crop',
-            ),
-            const ToolDefinition(
-              icon: Icons.rotate_right_rounded,
-              name: 'Rotate',
-            ),
-            const ToolDefinition(
-              icon: Icons.flip_rounded,
-              name: 'Flip',
-            ),
-            const ToolDefinition(
-              icon: Icons.zoom_in_rounded,
-              name: 'Zoom In',
-            ),
-            const ToolDefinition(
-              icon: Icons.zoom_out_rounded,
-              name: 'Zoom Out',
-            ),
-            const ToolDefinition(
-              icon: Icons.auto_fix_high_rounded,
-              name: 'Remove Background',
-            ),
-            const ToolDefinition(
-              icon: Icons.undo_rounded,
-              name: 'Undo',
-            ),
-            const ToolDefinition(
-              icon: Icons.redo_rounded,
-              name: 'Redo',
-            ),
-          ],
-        ),
-        Expanded(
-          child: Row(
-            children: [
-              Expanded(
-                child: ImageCanvas(
+    return KeyboardListener(
+      focusNode: _workspaceFocusNode,
+      onKeyEvent: _handleWorkspaceKey,
+      child: Column(
+        children: [
+          ModivkaToolBar(
+            tools: [
+              ToolDefinition(
+                icon: Icons.add_photo_alternate_outlined,
+                name: 'Add Image',
+                onPressed: widget.onAddImage,
+              ),
+              ToolDefinition(
+                icon: Icons.layers_outlined,
+                name: 'Add Image Layer',
+                onPressed: widget.onAddLayer,
+              ),
+              ToolDefinition(
+                icon: Icons.text_fields_rounded,
+                name: 'Add Text Layer',
+                onPressed: _addTextLayer,
+              ),
+              const ToolDefinition(
+                icon: Icons.content_cut_rounded,
+                name: 'Crop',
+              ),
+              const ToolDefinition(
+                icon: Icons.rotate_right_rounded,
+                name: 'Rotate',
+              ),
+              const ToolDefinition(
+                icon: Icons.flip_rounded,
+                name: 'Flip',
+              ),
+              const ToolDefinition(
+                icon: Icons.zoom_in_rounded,
+                name: 'Zoom In',
+              ),
+              const ToolDefinition(
+                icon: Icons.zoom_out_rounded,
+                name: 'Zoom Out',
+              ),
+              const ToolDefinition(
+                icon: Icons.auto_fix_high_rounded,
+                name: 'Remove Background',
+              ),
+              const ToolDefinition(
+                icon: Icons.undo_rounded,
+                name: 'Undo',
+              ),
+              const ToolDefinition(
+                icon: Icons.redo_rounded,
+                name: 'Redo',
+              ),
+            ],
+          ),
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _workspaceFocusNode.requestFocus,
+                    child: ImageCanvas(
+                      layers: _layers,
+                      selectedIndex: _selectedLayer,
+                      onSelected: (index) {
+                        setState(() {
+                          _selectedLayer = index;
+                        });
+                      },
+                      onMove: _moveSelected,
+                      onResize: _resizeSelected,
+                      onRotate: _rotateSelected,
+                    ),
+                  ),
+                ),
+                LayersPanel(
                   layers: _layers,
                   selectedIndex: _selectedLayer,
                   onSelected: (index) {
@@ -771,69 +829,57 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
                       _selectedLayer = index;
                     });
                   },
-                  onMove: _moveSelected,
-                  onResize: _resizeSelected,
-                  onRotate: _rotateSelected,
+                  onVisibilityChanged: _toggleVisibility,
+                  onLockChanged: _toggleLayerLock,
+                  onAdd: _addTextLayer,
+                  onDelete: _deleteSelected,
+                  onDuplicate: _duplicateSelected,
+                  onMoveUp: _moveUp,
+                  onMoveDown: _moveDown,
                 ),
-              ),
-              LayersPanel(
-                layers: _layers,
-                selectedIndex: _selectedLayer,
-                onSelected: (index) {
-                  setState(() {
-                    _selectedLayer = index;
-                  });
-                },
-                onVisibilityChanged: _toggleVisibility,
-                onLockChanged: _toggleLayerLock,
-                onAdd: _addTextLayer,
-                onDelete: _deleteSelected,
-                onDuplicate: _duplicateSelected,
-                onMoveUp: _moveUp,
-                onMoveDown: _moveDown,
-              ),
-              LayerProperties(
-                layer: _currentLayer,
-                onDelete: _deleteSelected,
-                onMoveUp: _moveUp,
-                onMoveDown: _moveDown,
-                onXChanged: _setX,
-                onYChanged: _setY,
-                onWidthChanged: _setWidth,
-                onHeightChanged: _setHeight,
-                onRotationChanged: _setRotation,
-                onOpacityChanged: _setOpacity,
-                onLockChanged: _toggleLock,
-                onTextChanged: _setText,
-                onFontFamilyChanged: _setFontFamily,
-                onFontSizeChanged: _setFontSize,
-                onBoldChanged: _setBold,
-                onItalicChanged: _setItalic,
-                onUnderlineChanged: _setUnderline,
-                onStrikethroughChanged: _setStrikethrough,
-                onLetterSpacingChanged: _setLetterSpacing,
-                onLineHeightChanged: _setLineHeight,
-                onTextColorChanged: _setTextColor,
-                onTextAlignmentChanged: _setTextAlignment,
-                onAlignLeft: _alignLeft,
-                onAlignCenterHorizontal: _alignCenterHorizontal,
-                onAlignRight: _alignRight,
-                onAlignTop: _alignTop,
-                onAlignCenterVertical: _alignCenterVertical,
-                onAlignBottom: _alignBottom,
-                onDistributeHorizontal: _distributeHorizontal,
-                onDistributeVertical: _distributeVertical,
-              ),
-            ],
+                LayerProperties(
+                  layer: _currentLayer,
+                  onDelete: _deleteSelected,
+                  onMoveUp: _moveUp,
+                  onMoveDown: _moveDown,
+                  onXChanged: _setX,
+                  onYChanged: _setY,
+                  onWidthChanged: _setWidth,
+                  onHeightChanged: _setHeight,
+                  onRotationChanged: _setRotation,
+                  onOpacityChanged: _setOpacity,
+                  onLockChanged: _toggleLock,
+                  onTextChanged: _setText,
+                  onFontFamilyChanged: _setFontFamily,
+                  onFontSizeChanged: _setFontSize,
+                  onBoldChanged: _setBold,
+                  onItalicChanged: _setItalic,
+                  onUnderlineChanged: _setUnderline,
+                  onStrikethroughChanged: _setStrikethrough,
+                  onLetterSpacingChanged: _setLetterSpacing,
+                  onLineHeightChanged: _setLineHeight,
+                  onTextColorChanged: _setTextColor,
+                  onTextAlignmentChanged: _setTextAlignment,
+                  onAlignLeft: _alignLeft,
+                  onAlignCenterHorizontal: _alignCenterHorizontal,
+                  onAlignRight: _alignRight,
+                  onAlignTop: _alignTop,
+                  onAlignCenterVertical: _alignCenterVertical,
+                  onAlignBottom: _alignBottom,
+                  onDistributeHorizontal: _distributeHorizontal,
+                  onDistributeVertical: _distributeVertical,
+                ),
+              ],
+            ),
           ),
-        ),
-        const Divider(height: 1),
-        ItemStrip(
-          items: widget.items,
-          selectedIndex: widget.selectedIndex,
-          onSelected: widget.onSelected,
-        ),
-      ],
+          const Divider(height: 1),
+          ItemStrip(
+            items: widget.items,
+            selectedIndex: widget.selectedIndex,
+            onSelected: widget.onSelected,
+          ),
+        ],
+      ),
     );
   }
 }
