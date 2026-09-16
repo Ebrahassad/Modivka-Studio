@@ -21,7 +21,7 @@ class LayersPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 210,
+      width: 220,
       decoration: BoxDecoration(
         color: const Color(0xFF111118),
         border: Border(
@@ -71,7 +71,7 @@ class LayersPanel extends StatelessWidget {
                         child: Container(
                           height: 52,
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 7,
+                            horizontal: 5,
                           ),
                           decoration: BoxDecoration(
                             color: selected

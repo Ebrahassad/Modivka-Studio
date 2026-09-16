@@ -74,12 +74,16 @@ class ImageCanvas extends StatelessWidget {
       );
     } else {
       content = Center(
-        child: Text(
-          layer.name,
-          style: const TextStyle(
-            color: Colors.black,
-            fontSize: 28,
-            fontWeight: FontWeight.w800,
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Text(
+            layer.text.isEmpty ? layer.name : layer.text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
       );

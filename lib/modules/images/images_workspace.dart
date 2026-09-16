@@ -4,6 +4,7 @@ import '../../core/models/canvas_layer.dart';
 import '../../core/models/workspace_item.dart';
 import '../../widgets/image_canvas.dart';
 import '../../widgets/item_strip.dart';
+import '../../widgets/layer_properties.dart';
 import '../../widgets/layers_panel.dart';
 import '../../widgets/tool_bar.dart';
 
@@ -32,6 +33,12 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
   int _selectedLayer = -1;
 
   @override
+  void initState() {
+    super.initState();
+    _syncLayers();
+  }
+
+  @override
   void didUpdateWidget(
     covariant ImagesWorkspace oldWidget,
   ) {
@@ -42,25 +49,20 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _syncLayers();
-  }
-
   void _syncLayers() {
     for (final item in widget.items) {
+      final id =
+          item.path.isEmpty ? '${item.name}-${item.hashCode}' : item.path;
+
       final exists = _layers.any(
-        (layer) => layer.id == item.path && item.path.isNotEmpty,
+        (layer) => layer.id == id,
       );
 
       if (!exists && item.bytes != null) {
         _layers.insert(
           0,
           CanvasLayer(
-            id: item.path.isEmpty
-                ? '${item.name}-${_layers.length}'
-                : item.path,
+            id: id,
             name: item.name,
             type: LayerType.image,
             bytes: item.bytes,
@@ -82,14 +84,18 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     }
   }
 
-  void _moveSelected(Offset delta) {
+  CanvasLayer? get _currentLayer {
     if (_selectedLayer < 0 || _selectedLayer >= _layers.length) {
-      return;
+      return null;
     }
 
-    final layer = _layers[_selectedLayer];
+    return _layers[_selectedLayer];
+  }
 
-    if (layer.locked) {
+  void _moveSelected(Offset delta) {
+    final layer = _currentLayer;
+
+    if (layer == null || layer.locked) {
       return;
     }
 
@@ -99,13 +105,150 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     });
   }
 
+  void _setX(double value) {
+    final layer = _currentLayer;
+
+    if (layer == null || layer.locked) {
+      return;
+    }
+
+    setState(() {
+      layer.x = value;
+    });
+  }
+
+  void _setY(double value) {
+    final layer = _currentLayer;
+
+    if (layer == null || layer.locked) {
+      return;
+    }
+
+    setState(() {
+      layer.y = value;
+    });
+  }
+
+  void _setWidth(double value) {
+    final layer = _currentLayer;
+
+    if (layer == null || layer.locked) {
+      return;
+    }
+
+    setState(() {
+      layer.width = value.clamp(20.0, 2000.0);
+    });
+  }
+
+  void _setHeight(double value) {
+    final layer = _currentLayer;
+
+    if (layer == null || layer.locked) {
+      return;
+    }
+
+    setState(() {
+      layer.height = value.clamp(20.0, 2000.0);
+    });
+  }
+
+  void _setRotation(double value) {
+    final layer = _currentLayer;
+
+    if (layer == null || layer.locked) {
+      return;
+    }
+
+    setState(() {
+      layer.rotation = value;
+    });
+  }
+
+  void _setOpacity(double value) {
+    final layer = _currentLayer;
+
+    if (layer == null) {
+      return;
+    }
+
+    setState(() {
+      layer.opacity = value.clamp(0.0, 1.0);
+    });
+  }
+
+  void _setText(String value) {
+    final layer = _currentLayer;
+
+    if (layer == null || layer.type != LayerType.text) {
+      return;
+    }
+
+    setState(() {
+      layer.text = value;
+      layer.name = value.trim().isEmpty ? 'Text Layer' : value.trim();
+    });
+  }
+
+  void _toggleLock(bool value) {
+    final layer = _currentLayer;
+
+    if (layer == null) {
+      return;
+    }
+
+    setState(() {
+      layer.locked = value;
+    });
+  }
+
+  void _deleteSelected() {
+    if (_selectedLayer < 0 || _selectedLayer >= _layers.length) {
+      return;
+    }
+
+    setState(() {
+      _layers.removeAt(_selectedLayer);
+
+      if (_layers.isEmpty) {
+        _selectedLayer = -1;
+      } else if (_selectedLayer >= _layers.length) {
+        _selectedLayer = _layers.length - 1;
+      }
+    });
+  }
+
+  void _moveUp() {
+    if (_selectedLayer <= 0) {
+      return;
+    }
+
+    setState(() {
+      final layer = _layers.removeAt(_selectedLayer);
+      _layers.insert(_selectedLayer - 1, layer);
+      _selectedLayer--;
+    });
+  }
+
+  void _moveDown() {
+    if (_selectedLayer < 0 || _selectedLayer >= _layers.length - 1) {
+      return;
+    }
+
+    setState(() {
+      final layer = _layers.removeAt(_selectedLayer);
+      _layers.insert(_selectedLayer + 1, layer);
+      _selectedLayer++;
+    });
+  }
+
   void _toggleVisibility(int index) {
     setState(() {
       _layers[index].visible = !_layers[index].visible;
     });
   }
 
-  void _toggleLock(int index) {
+  void _toggleLayerLock(int index) {
     setState(() {
       _layers[index].locked = !_layers[index].locked;
     });
@@ -119,12 +262,14 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
           id: 'text-${DateTime.now().microsecondsSinceEpoch}',
           name: 'Text Layer',
           type: LayerType.text,
+          text: 'Modivka',
           x: 50,
           y: 50,
           width: 300,
           height: 90,
         ),
       );
+
       _selectedLayer = 0;
     });
   }
@@ -208,7 +353,21 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
                   });
                 },
                 onVisibilityChanged: _toggleVisibility,
+                onLockChanged: _toggleLayerLock,
+              ),
+              LayerProperties(
+                layer: _currentLayer,
+                onDelete: _deleteSelected,
+                onMoveUp: _moveUp,
+                onMoveDown: _moveDown,
+                onXChanged: _setX,
+                onYChanged: _setY,
+                onWidthChanged: _setWidth,
+                onHeightChanged: _setHeight,
+                onRotationChanged: _setRotation,
+                onOpacityChanged: _setOpacity,
                 onLockChanged: _toggleLock,
+                onTextChanged: _setText,
               ),
             ],
           ),

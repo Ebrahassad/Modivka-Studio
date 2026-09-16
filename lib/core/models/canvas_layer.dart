@@ -7,9 +7,11 @@ enum LayerType {
 
 class CanvasLayer {
   final String id;
-  final String name;
+  String name;
   final LayerType type;
   final Uint8List? bytes;
+
+  String text;
 
   double x;
   double y;
@@ -17,6 +19,7 @@ class CanvasLayer {
   double height;
   double rotation;
   double opacity;
+
   bool visible;
   bool locked;
 
@@ -25,6 +28,7 @@ class CanvasLayer {
     required this.name,
     required this.type,
     this.bytes,
+    this.text = '',
     this.x = 0,
     this.y = 0,
     this.width = 300,
