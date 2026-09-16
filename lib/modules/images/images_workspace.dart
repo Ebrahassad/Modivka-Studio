@@ -267,6 +267,30 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     });
   }
 
+  void _setUnderline(bool value) {
+    final layer = _currentLayer;
+
+    if (layer == null || layer.type != LayerType.text || layer.locked) {
+      return;
+    }
+
+    setState(() {
+      layer.underline = value;
+    });
+  }
+
+  void _setStrikethrough(bool value) {
+    final layer = _currentLayer;
+
+    if (layer == null || layer.type != LayerType.text || layer.locked) {
+      return;
+    }
+
+    setState(() {
+      layer.strikethrough = value;
+    });
+  }
+
   void _setLetterSpacing(double value) {
     final layer = _currentLayer;
 
@@ -531,6 +555,8 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
                 onFontSizeChanged: _setFontSize,
                 onBoldChanged: _setBold,
                 onItalicChanged: _setItalic,
+                onUnderlineChanged: _setUnderline,
+                onStrikethroughChanged: _setStrikethrough,
                 onLetterSpacingChanged: _setLetterSpacing,
                 onLineHeightChanged: _setLineHeight,
                 onTextColorChanged: _setTextColor,

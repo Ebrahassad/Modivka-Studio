@@ -19,6 +19,8 @@ class LayerProperties extends StatelessWidget {
   final ValueChanged<double>? onFontSizeChanged;
   final ValueChanged<bool>? onBoldChanged;
   final ValueChanged<bool>? onItalicChanged;
+  final ValueChanged<bool>? onUnderlineChanged;
+  final ValueChanged<bool>? onStrikethroughChanged;
   final ValueChanged<double>? onLetterSpacingChanged;
   final ValueChanged<double>? onLineHeightChanged;
   final ValueChanged<ColorValue>? onTextColorChanged;
@@ -42,6 +44,8 @@ class LayerProperties extends StatelessWidget {
     this.onFontSizeChanged,
     this.onBoldChanged,
     this.onItalicChanged,
+    this.onUnderlineChanged,
+    this.onStrikethroughChanged,
     this.onLetterSpacingChanged,
     this.onLineHeightChanged,
     this.onTextColorChanged,
@@ -154,6 +158,18 @@ class LayerProperties extends StatelessWidget {
                     title: const Text('Italic'),
                     value: current.italic,
                     onChanged: onItalicChanged,
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Underline'),
+                    value: current.underline,
+                    onChanged: onUnderlineChanged,
+                  ),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Strikethrough'),
+                    value: current.strikethrough,
+                    onChanged: onStrikethroughChanged,
                   ),
                   _numberField(
                     label: 'Letter Spacing',

@@ -268,6 +268,10 @@ class _LayerContent extends StatelessWidget {
             fontFamily: layer.fontFamily,
             letterSpacing: layer.letterSpacing,
             height: layer.lineHeight,
+            decoration: TextDecoration.combine([
+              if (layer.underline) TextDecoration.underline,
+              if (layer.strikethrough) TextDecoration.lineThrough,
+            ]),
           ),
         ),
       );
