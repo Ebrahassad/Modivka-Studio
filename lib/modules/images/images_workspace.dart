@@ -153,6 +153,39 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     });
   }
 
+  void _resizeSelected(Offset delta) {
+    if (_selectedLayer < 0 || _selectedLayer >= _layers.length) {
+      return;
+    }
+
+    final layer = _layers[_selectedLayer];
+
+    if (layer.locked) {
+      return;
+    }
+
+    setState(() {
+      layer.width = (layer.width + delta.dx).clamp(40.0, 2000.0);
+      layer.height = (layer.height + delta.dy).clamp(40.0, 2000.0);
+    });
+  }
+
+  void _rotateSelected(double delta) {
+    if (_selectedLayer < 0 || _selectedLayer >= _layers.length) {
+      return;
+    }
+
+    final layer = _layers[_selectedLayer];
+
+    if (layer.locked) {
+      return;
+    }
+
+    setState(() {
+      layer.rotation += delta * 0.01;
+    });
+  }
+
   void _setRotation(double value) {
     final layer = _currentLayer;
 
@@ -342,6 +375,8 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
                     });
                   },
                   onMove: _moveSelected,
+                  onResize: _resizeSelected,
+                  onRotate: _rotateSelected,
                 ),
               ),
               LayersPanel(

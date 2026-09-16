@@ -1,46 +1,64 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../core/models/canvas_layer.dart';
+import 'transform_handles.dart';
 
-class ImageCanvas extends StatefulWidget {
+class ImageCanvas extends StatelessWidget {
   final List<CanvasLayer> layers;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
-  final ValueChanged<Offset>? onMove;
+  final ValueChanged<Offset> onMove;
+  final ValueChanged<Offset>? onResize;
+  final ValueChanged<double>? onRotate;
 
   const ImageCanvas({
     super.key,
     required this.layers,
     required this.selectedIndex,
     required this.onSelected,
-    this.onMove,
+    required this.onMove,
+    this.onResize,
+    this.onRotate,
   });
-
-  @override
-  State<ImageCanvas> createState() => _ImageCanvasState();
-}
-
-class _ImageCanvasState extends State<ImageCanvas> {
-  Offset? _dragStart;
-  double? _startX;
-  double? _startY;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFF15151D),
+      color: const Color(0xFF17171B),
       child: LayoutBuilder(
         builder: (context, constraints) {
           return Stack(
             clipBehavior: Clip.none,
             children: [
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: _CheckerboardPainter(),
+              Center(
+                child: Container(
+                  width: mathMin(constraints.maxWidth - 40, 900),
+                  height: mathMin(constraints.maxHeight - 40, 650),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(4),
+                    boxShadow: const [
+                      BoxShadow(
+                        blurRadius: 20,
+                        color: Colors.black45,
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      for (int i = 0; i < layers.length; i++)
+                        _buildLayer(
+                          context,
+                          layers[i],
+                          i,
+                        ),
+                    ],
+                  ),
                 ),
               ),
-              for (int index = 0; index < widget.layers.length; index++)
-                _buildLayer(widget.layers[index], index),
             ],
           );
         },
@@ -48,139 +66,71 @@ class _ImageCanvasState extends State<ImageCanvas> {
     );
   }
 
-  Widget _buildLayer(CanvasLayer layer, int index) {
+  Widget _buildLayer(
+    BuildContext context,
+    CanvasLayer layer,
+    int index,
+  ) {
     if (!layer.visible) {
       return const SizedBox.shrink();
     }
 
-    final selected = index == widget.selectedIndex;
+    final selected = index == selectedIndex;
 
-    return Positioned(
+    final widget = Positioned(
       left: layer.x,
       top: layer.y,
       width: layer.width,
       height: layer.height,
       child: GestureDetector(
-        onTap: () => widget.onSelected(index),
-        onPanStart: selected && !layer.locked
-            ? (details) {
-                _dragStart = details.globalPosition;
-                _startX = layer.x;
-                _startY = layer.y;
-              }
-            : null,
-        onPanUpdate: selected && !layer.locked
-            ? (details) {
-                if (_dragStart == null || _startX == null || _startY == null) {
-                  return;
-                }
-
-                final delta = details.globalPosition - _dragStart!;
-
-                setState(() {
-                  layer.x = _startX! + delta.dx;
-                  layer.y = _startY! + delta.dy;
-                });
-
-                widget.onMove?.call(delta);
-              }
-            : null,
-        onPanEnd: selected && !layer.locked
-            ? (_) {
-                _dragStart = null;
-                _startX = null;
-                _startY = null;
-              }
-            : null,
+        behavior: HitTestBehavior.translucent,
+        onTap: () => onSelected(index),
+        onPanStart: (_) => onSelected(index),
+        onPanUpdate: layer.locked
+            ? null
+            : (details) {
+                onSelected(index);
+                onMove(details.delta);
+              },
         child: Transform.rotate(
           angle: layer.rotation,
           child: Opacity(
             opacity: layer.opacity.clamp(0.0, 1.0),
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Positioned.fill(
-                  child: _layerContent(layer),
-                ),
-                if (selected)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Theme.of(context).colorScheme.primary,
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                if (selected) ..._buildHandles(layer),
-              ],
-            ),
+            child: _layerContent(layer),
           ),
         ),
       ),
     );
-  }
 
-  List<Widget> _buildHandles(CanvasLayer layer) {
-    const size = 12.0;
-
-    Widget handle({
-      required double? left,
-      required double? right,
-      required double? top,
-      required double? bottom,
-    }) {
-      return Positioned(
-        left: left,
-        right: right,
-        top: top,
-        bottom: bottom,
-        child: IgnorePointer(
-          child: Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(
-                color: Colors.black,
-                width: 1.5,
-              ),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ),
-      );
+    if (!selected) {
+      return widget;
     }
 
-    return [
-      handle(
-        left: -6,
-        top: -6,
-        right: null,
-        bottom: null,
-      ),
-      handle(
-        left: null,
-        top: -6,
-        right: -6,
-        bottom: null,
-      ),
-      handle(
-        left: -6,
-        top: null,
-        right: null,
-        bottom: -6,
-      ),
-      handle(
-        left: null,
-        top: null,
-        right: -6,
-        bottom: -6,
-      ),
-    ];
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        widget,
+        Positioned(
+          left: layer.x,
+          top: layer.y,
+          width: layer.width,
+          height: layer.height,
+          child: TransformHandles(
+            rect: Rect.fromLTWH(
+              0,
+              0,
+              layer.width,
+              layer.height,
+            ),
+            rotation: layer.rotation,
+            locked: layer.locked,
+            onMove: layer.locked ? null : onMove,
+            onResize: layer.locked ? null : onResize,
+            onRotate: layer.locked ? null : onRotate,
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _layerContent(CanvasLayer layer) {
@@ -192,62 +142,43 @@ class _ImageCanvasState extends State<ImageCanvas> {
           layer.text,
           textAlign: TextAlign.center,
           style: const TextStyle(
-            color: Colors.white,
+            color: Colors.black,
             fontSize: 32,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
           ),
         ),
       );
     }
 
-    if (layer.bytes == null) {
-      return const Center(
-        child: Icon(
-          Icons.image_outlined,
-          size: 42,
-          color: Colors.white54,
-        ),
-      );
-    }
+    final Uint8List? bytes = layer.bytes;
 
-    return Image.memory(
-      layer.bytes!,
-      fit: BoxFit.contain,
-      errorBuilder: (_, __, ___) {
-        return const Center(
+    if (bytes == null || bytes.isEmpty) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.grey.shade200,
+          border: Border.all(
+            color: Colors.grey.shade400,
+          ),
+        ),
+        child: const Center(
           child: Icon(
-            Icons.broken_image_outlined,
-            color: Colors.white54,
+            Icons.image_outlined,
+            size: 48,
+            color: Colors.grey,
           ),
-        );
-      },
+        ),
+      );
+    }
+
+    return ClipRect(
+      child: Image.memory(
+        bytes,
+        fit: BoxFit.contain,
+      ),
     );
   }
 }
 
-class _CheckerboardPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    const cell = 16.0;
-
-    final light = Paint()..color = const Color(0xFF25252E);
-
-    final dark = Paint()..color = const Color(0xFF1D1D25);
-
-    for (double y = 0; y < size.height; y += cell) {
-      for (double x = 0; x < size.width; x += cell) {
-        final even = ((x / cell).floor() + (y / cell).floor()) % 2 == 0;
-
-        canvas.drawRect(
-          Rect.fromLTWH(x, y, cell, cell),
-          even ? light : dark,
-        );
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
-  }
+double mathMin(double a, double b) {
+  return a < b ? a : b;
 }
