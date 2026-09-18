@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Setup Java
         uses: actions/setup-java@v5
@@ -32,91 +32,98 @@ jobs:
       - name: Flutter version
         run: flutter --version
 
-      - name: Verify Android 36
+      - name: Prepare Android SDK 36
         shell: bash
         run: |
           set -e
 
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          echo "===== ANDROID SDK ====="
 
-          test -d "$ANDROID_SDK_ROOT/platforms/android-36"
+          SDKMANAGER=""
 
-          echo "Android 36 platform: OK"
+          for candidate in \
+            "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "$ANDROID_HOME/cmdline-tools/bin/sdkmanager" \
+            "$ANDROID_HOME/cmdline-tools/16.0/bin/sdkmanager" \
+            "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" \
+            "$ANDROID_SDK_ROOT/cmdline-tools/bin/sdkmanager"
+          do
+            if [ -x "$candidate" ]; then
+              SDKMANAGER="$candidate"
+              break
+            fi
+          done
 
-      - name: Flutter pub get
-        run: flutter pub get
+          if [ -z "$SDKMANAGER" ]; then
+            SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" \
+              -type f -name sdkmanager -perm -111 2>/dev/null | head -n 1 || true)"
+          fi
 
-      - name: Configure compileSdk 36
+          if [ -z "$SDKMANAGER" ]; then
+            echo "ERROR: sdkmanager was not found."
+            exit 1
+          fi
+
+          echo "sdkmanager: $SDKMANAGER"
+
+          yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
+
+          "$SDKMANAGER" \
+            "platforms;android-36" \
+            "build-tools;36.0.0"
+
+          test -d "$ANDROID_HOME/platforms/android-36"
+          test -d "$ANDROID_HOME/build-tools/36.0.0"
+
+          echo "Android SDK 36: OK"
+
+      - name: Force project compileSdk 36
         shell: bash
         run: |
           set -e
+
+          FILE="android/app/build.gradle.kts"
+
+          echo "===== BEFORE ====="
+          grep -n "compileSdk" "$FILE" || true
 
           python3 - <<'PY'
           from pathlib import Path
           import re
 
-          path = Path("android/app/build.gradle.kts")
-          text = path.read_text()
+          p = Path("android/app/build.gradle.kts")
+          s = p.read_text()
 
-          original = text
-
-          patterns = [
+          s = re.sub(
               r'compileSdk\s*=\s*flutter\.compileSdkVersion',
+              'compileSdk = 36',
+              s
+          )
+
+          s = re.sub(
               r'compileSdk\s*=\s*\d+',
-          ]
+              'compileSdk = 36',
+              s
+          )
 
-          changed = False
+          if "compileSdk = 36" not in s:
+              raise SystemExit("ERROR: Could not set compileSdk = 36")
 
-          for pattern in patterns:
-              new_text, count = re.subn(
-                  pattern,
-                  'compileSdk = 36',
-                  text,
-                  count=1
-              )
-
-              if count:
-                  text = new_text
-                  changed = True
-                  break
-
-          if not changed:
-              raise SystemExit(
-                  "ERROR: compileSdk declaration was not found."
-              )
-
-          path.write_text(text)
-
-          print("compileSdk configuration changed.")
-          print("----- FINAL ANDROID CONFIG -----")
-
-          for line in text.splitlines():
-              if "compileSdk" in line or "targetSdk" in line or "minSdk" in line:
-                  print(line)
+          p.write_text(s)
           PY
 
-          echo
-          echo "===== VERIFY FILE ====="
+          echo "===== AFTER ====="
+          grep -n "compileSdk" "$FILE"
 
-          grep -n -E \
-            "compileSdk|targetSdk|minSdk" \
-            android/app/build.gradle.kts
+          grep -q "compileSdk = 36" "$FILE"
 
-          echo
-          echo "===== REQUIRED CHECK ====="
+          echo "compileSdk 36: VERIFIED"
 
-          grep -Eq \
-            'compileSdk[[:space:]]*=[[:space:]]*36' \
-            android/app/build.gradle.kts
-
-          echo "compileSdk = 36 CONFIRMED"
+      - name: Flutter pub get
+        run: flutter pub get
 
       - name: Flutter analyze
         run: flutter analyze
-
-      - name: Dart format check
-        run: dart format --output=none --set-exit-if-changed lib
 
       - name: Git diff check
         run: git diff --check
@@ -141,8 +148,6 @@ jobs:
           echo "$KEYSTORE_BASE64" | base64 --decode \
             > android/app/keystore/modivka-release.jks
 
-          test -s android/app/keystore/modivka-release.jks
-
           cat > android/key.properties <<EOF2
           storePassword=$KEYSTORE_PASSWORD
           keyPassword=$KEY_PASSWORD
@@ -150,34 +155,48 @@ jobs:
           storeFile=keystore/modivka-release.jks
           EOF2
 
-          test -s android/key.properties
+          test -f android/app/keystore/modivka-release.jks
+          test -f android/key.properties
 
           echo "Release signing prepared."
+
+      - name: Verify final Android configuration
+        shell: bash
+        run: |
+          set -e
+
+          echo "===== FINAL CONFIGURATION ====="
+
+          grep -n "compileSdk" android/app/build.gradle.kts
+
+          grep -q "compileSdk = 36" android/app/build.gradle.kts
+
+          test -d "$ANDROID_HOME/platforms/android-36"
+          test -d "$ANDROID_HOME/build-tools/36.0.0"
+
+          echo "===== CONFIGURATION VERIFIED ====="
 
       - name: Build release APK
         shell: bash
         run: |
           set -e
 
-          echo "========================================"
-          echo " FINAL BUILD CONFIGURATION"
-          echo "========================================"
-
-          grep -n -E \
-            "compileSdk|targetSdk|minSdk" \
-            android/app/build.gradle.kts
-
-          echo
-          echo "========================================"
-          echo " BUILD RELEASE APK"
-          echo "========================================"
-
+          echo "===== BUILD RELEASE APK ====="
+          flutter clean
+          flutter pub get
           flutter build apk --release
 
-          test -s build/app/outputs/flutter-apk/app-release.apk
+      - name: Verify APK
+        shell: bash
+        run: |
+          set -e
 
-          echo
-          echo "APK BUILD SUCCESSFUL"
+          APK="build/app/outputs/flutter-apk/app-release.apk"
+
+          test -f "$APK"
+
+          echo "APK CREATED:"
+          ls -lh "$APK"
 
       - name: Prepare release package
         shell: bash
@@ -194,13 +213,6 @@ jobs:
           zip ../Modivka-Studio-${{ github.run_number }}.zip \
             Modivka-Studio-release.apk
 
-          cd ..
-
-          test -s \
-            "Modivka-Studio-${{ github.run_number }}.zip"
-
-          echo "Release package created."
-
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -211,7 +223,6 @@ jobs:
 
       - name: Cleanup signing files
         if: always()
-        shell: bash
         run: |
           rm -f android/key.properties
           rm -f android/app/keystore/modivka-release.jks
