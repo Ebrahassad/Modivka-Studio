@@ -32,7 +32,7 @@ android {
     }
 
     namespace = "com.hassadi.modivka_studio"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
