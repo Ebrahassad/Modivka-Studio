@@ -1,0 +1,74 @@
+name: Modivka Studio Android Build
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Flutter analyze
+        run: flutter analyze
+
+      - name: Flutter format check
+        run: dart format --output=none --set-exit-if-changed lib
+
+      - name: Git diff check
+        run: git diff --check
+
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Prepare release package
+        run: |
+          mkdir -p release
+          cp build/app/outputs/flutter-apk/app-release.apk \
+             release/Modivka-Studio-release.apk
+
+      - name: Create ZIP
+        run: |
+          cd release
+          zip ../Modivka-Studio-${{ github.run_number }}.zip \
+            Modivka-Studio-release.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Modivka-Studio-${{ github.run_number }}
+          path: release/Modivka-Studio-release.apk
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Modivka Studio v1.0.${{ github.run_number }}
+          files: Modivka-Studio-${{ github.run_number }}.zip
+          generate_release_notes: true
