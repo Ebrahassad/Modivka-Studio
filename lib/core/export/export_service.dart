@@ -8,7 +8,10 @@ class ExportResult {
   final String path;
   final String fileName;
 
-  const ExportResult({required this.path, required this.fileName});
+  const ExportResult({
+    required this.path,
+    required this.fileName,
+  });
 }
 
 class ExportService {
@@ -23,7 +26,10 @@ class ExportService {
 
     await file.writeAsBytes(bytes, flush: true);
 
-    return ExportResult(path: file.path, fileName: fileName);
+    return ExportResult(
+      path: file.path,
+      fileName: fileName,
+    );
   }
 
   Future<void> shareFile(String path) async {
@@ -31,6 +37,11 @@ class ExportService {
       return;
     }
 
-    await Share.shareXFiles([XFile(path)], text: 'Modivka Studio');
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(path)],
+        text: 'Modivka Studio',
+      ),
+    );
   }
 }

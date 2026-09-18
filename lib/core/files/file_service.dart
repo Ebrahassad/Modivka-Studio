@@ -8,50 +8,56 @@ import '../models/workspace_item.dart';
 class FileService {
   const FileService();
 
-  Future<List<WorkspaceItem>> openFiles({required WorkspaceType type}) async {
-    final result = await FilePicker.platform.pickFiles(
-      allowMultiple: true,
-      withData: true,
+  Future<List<WorkspaceItem>> openFiles({
+    required WorkspaceType type,
+  }) async {
+    final files = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: _extensions(type),
     );
 
-    if (result == null) {
+    if (files.isEmpty) {
       return const [];
     }
 
-    return result.files.map((file) {
-      final bytes = file.bytes;
-
+    return files.map((file) {
       return WorkspaceItem(
         name: file.name,
         path: file.path ?? '',
         type: type,
-        bytes: bytes,
+        bytes: _readPlatformFileBytes(file),
       );
     }).toList();
   }
 
   Future<WorkspaceItem?> openSingleImage() async {
-    final result = await FilePicker.platform.pickFiles(
-      allowMultiple: false,
-      withData: true,
+    final file = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: _extensions(WorkspaceType.image),
     );
 
-    if (result == null || result.files.isEmpty) {
+    if (file == null) {
       return null;
     }
-
-    final file = result.files.first;
 
     return WorkspaceItem(
       name: file.name,
       path: file.path ?? '',
       type: WorkspaceType.image,
-      bytes: file.bytes,
+      bytes: _readPlatformFileBytes(file),
     );
+  }
+
+  Uint8List? _readPlatformFileBytes(PlatformFile file) {
+    if (file.path == null || file.path!.isEmpty) {
+      return null;
+    }
+
+    try {
+      return File(file.path!).readAsBytesSync();
+    } catch (_) {
+      return null;
+    }
   }
 
   List<String> _extensions(WorkspaceType type) {
