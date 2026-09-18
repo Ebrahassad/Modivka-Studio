@@ -6,21 +6,185 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Test Runner
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Android SDK check
+        shell: bash
         run: |
-          echo "========================================"
-          echo " MODIVKA GITHUB ACTIONS RUNNER OK"
-          echo "========================================"
-          echo "Repository: $GITHUB_REPOSITORY"
-          echo "Branch: $GITHUB_REF_NAME"
-          echo "Commit: $GITHUB_SHA"
-          echo "Runner: $RUNNER_OS"
-          echo "========================================"
+          set -e
+
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+
+          echo "===== ANDROID PLATFORMS ====="
+          ls -la "$ANDROID_SDK_ROOT/platforms"
+
+          echo "===== BUILD TOOLS ====="
+          ls -la "$ANDROID_SDK_ROOT/build-tools"
+
+          test -d "$ANDROID_SDK_ROOT/platforms/android-36"
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Flutter analyze
+        run: flutter analyze
+
+      - name: Dart format check
+        run: dart format --output=none --set-exit-if-changed lib
+
+      - name: Git diff check
+        run: git diff --check
+
+      - name: Prepare Android build configuration
+        shell: bash
+        run: |
+          set -e
+
+          echo "===== FORCE COMPILE SDK 36 ====="
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("android/app/build.gradle.kts")
+          text = path.read_text()
+
+          import re
+
+          text, count = re.subn(
+              r'compileSdk\s*=\s*flutter\.compileSdkVersion',
+              'compileSdk = 36',
+              text,
+              count=1
+          )
+
+          if count == 0:
+              text, count = re.subn(
+                  r'compileSdk\s*=\s*\d+',
+                  'compileSdk = 36',
+                  text,
+                  count=1
+              )
+
+          if count == 0:
+              raise SystemExit(
+                  "ERROR: Could not find compileSdk declaration."
+              )
+
+          path.write_text(text)
+          print("compileSdk = 36 configured.")
+          PY
+
+          grep -n "compileSdk" android/app/build.gradle.kts
+
+      - name: Prepare release signing
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -e
+
+          echo "===== SIGNING SETUP ====="
+
+          test -n "$KEYSTORE_BASE64"
+          test -n "$KEYSTORE_PASSWORD"
+          test -n "$KEY_ALIAS"
+          test -n "$KEY_PASSWORD"
+
+          mkdir -p android/app/keystore
+
+          echo "$KEYSTORE_BASE64" | base64 --decode \
+            > android/app/keystore/modivka-release.jks
+
+          test -s android/app/keystore/modivka-release.jks
+
+          cat > android/key.properties <<EOF2
+          storePassword=$KEYSTORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=keystore/modivka-release.jks
+          EOF2
+
+          test -s android/key.properties
+
+          echo "Release signing prepared."
+
+      - name: Build release APK
+        run: |
+          set -e
+
+          echo "===== BUILD RELEASE APK ====="
+          flutter clean
+          flutter pub get
+          flutter build apk --release
+
+          test -s build/app/outputs/flutter-apk/app-release.apk
+
+          echo "APK BUILD SUCCESSFUL"
+          ls -lh build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Prepare release package
+        shell: bash
+        run: |
+          set -e
+
+          mkdir -p release
+
+          cp build/app/outputs/flutter-apk/app-release.apk \
+            release/Modivka-Studio-release.apk
+
+          cd release
+
+          zip ../Modivka-Studio-${{ github.run_number }}.zip \
+            Modivka-Studio-release.apk
+
+          cd ..
+
+          test -s "Modivka-Studio-${{ github.run_number }}.zip"
+
+          echo "===== RELEASE PACKAGE ====="
+          ls -lh \
+            release/Modivka-Studio-release.apk \
+            "Modivka-Studio-${{ github.run_number }}.zip"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Modivka Studio v1.0.${{ github.run_number }}
+          files: Modivka-Studio-${{ github.run_number }}.zip
+          generate_release_notes: true
+
+      - name: Cleanup signing files
+        if: always()
+        shell: bash
+        run: |
+          rm -f android/key.properties
+          rm -f android/app/keystore/modivka-release.jks
