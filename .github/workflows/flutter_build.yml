@@ -14,14 +14,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
+          cache: gradle
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -29,47 +31,118 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Flutter version
-        run: flutter --version
-
-      - name: Prepare Android SDK
+      - name: Locate Android SDK
         shell: bash
         run: |
           set -e
 
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          echo "===== ANDROID ENVIRONMENT ====="
 
-          if command -v sdkmanager >/dev/null 2>&1; then
-            SDKMANAGER="$(command -v sdkmanager)"
-          elif [ -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
-            SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          else
-            SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager 2>/dev/null | head -n 1)"
-          fi
+          echo "ANDROID_HOME=${ANDROID_HOME:-}"
+          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-}"
 
-          if [ -z "$SDKMANAGER" ] || [ ! -x "$SDKMANAGER" ]; then
-            echo "ERROR: Android sdkmanager was not found."
-            find "$ANDROID_HOME" -maxdepth 5 -name sdkmanager -type f -print || true
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+
+          if [ -z "$SDK_ROOT" ]; then
+            echo "ERROR: Android SDK root was not found."
             exit 1
           fi
 
-          echo "Using SDK manager: $SDKMANAGER"
+          echo "SDK_ROOT=$SDK_ROOT"
 
-          yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
+          SDKMANAGER=""
 
-          "$SDKMANAGER" \
+          if command -v sdkmanager >/dev/null 2>&1; then
+            SDKMANAGER="$(command -v sdkmanager)"
+          fi
+
+          if [ -z "$SDKMANAGER" ]; then
+            for candidate in \
+              "$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" \
+              "$SDK_ROOT/cmdline-tools/*/bin/sdkmanager"
+            do
+              for file in $candidate; do
+                if [ -x "$file" ]; then
+                  SDKMANAGER="$file"
+                  break 2
+                fi
+              done
+            done
+          fi
+
+          if [ -z "$SDKMANAGER" ]; then
+            echo "ERROR: sdkmanager was not found on the GitHub runner."
+            echo "Android SDK:"
+            find "$SDK_ROOT" -maxdepth 4 -type f -name sdkmanager -print 2>/dev/null || true
+            exit 1
+          fi
+
+          echo "SDKMANAGER=$SDKMANAGER"
+
+          SDKMANAGER_DIR="$(dirname "$SDKMANAGER")"
+          echo "$SDKMANAGER_DIR" >> "$GITHUB_PATH"
+          echo "$SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
+
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "MODIVKA_SDKMANAGER=$SDKMANAGER" >> "$GITHUB_ENV"
+
+          "$SDKMANAGER" --version
+
+      - name: Install required Android SDK packages
+        shell: bash
+        run: |
+          set -e
+
+          echo "===== ANDROID SDK PACKAGES ====="
+
+          SDKMANAGER="$MODIVKA_SDKMANAGER"
+
+          "$SDKMANAGER" --sdk_root="$ANDROID_SDK_ROOT" --install \
             "platform-tools" \
             "platforms;android-36" \
             "build-tools;36.0.0"
 
-          test -d "$ANDROID_HOME/platforms/android-36"
-          test -d "$ANDROID_HOME/build-tools/36.0.0"
+          test -d "$ANDROID_SDK_ROOT/platforms/android-36"
+          test -d "$ANDROID_SDK_ROOT/build-tools/36.0.0"
 
           echo "Android SDK 36 is ready."
 
+      - name: Flutter version
+        run: flutter --version
+
       - name: Flutter pub get
         run: flutter pub get
+
+      - name: Prepare compileSdk 36
+        shell: bash
+        run: |
+          set -e
+
+          echo "===== COMPILE SDK ====="
+
+          FILE="android/app/build.gradle.kts"
+
+          test -f "$FILE"
+
+          cp "$FILE" "$FILE.workflow-backup"
+
+          if grep -q 'compileSdk = flutter.compileSdkVersion' "$FILE"; then
+            sed -i \
+              's/compileSdk = flutter.compileSdkVersion/compileSdk = 36/' \
+              "$FILE"
+          elif grep -q 'compileSdk = [0-9]' "$FILE"; then
+            sed -i -E \
+              's/compileSdk = [0-9]+/compileSdk = 36/' \
+              "$FILE"
+          else
+            echo "ERROR: compileSdk declaration not found."
+            exit 1
+          fi
+
+          grep -n "compileSdk" "$FILE"
+
+          echo "Temporary compileSdk=36 applied only inside runner."
 
       - name: Flutter analyze
         run: flutter analyze
@@ -81,14 +154,16 @@ jobs:
         run: git diff --check
 
       - name: Prepare release signing
+        shell: bash
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        shell: bash
         run: |
           set -e
+
+          echo "===== SIGNING SETUP ====="
 
           test -n "$KEYSTORE_BASE64"
           test -n "$KEYSTORE_PASSWORD"
@@ -100,34 +175,53 @@ jobs:
           echo "$KEYSTORE_BASE64" | base64 --decode \
             > android/app/keystore/modivka-release.jks
 
-          cat > android/key.properties <<EOF2
-          storePassword=$KEYSTORE_PASSWORD
-          keyPassword=$KEY_PASSWORD
-          keyAlias=$KEY_ALIAS
-          storeFile=keystore/modivka-release.jks
-          EOF2
+          test -s android/app/keystore/modivka-release.jks
 
-          test -f android/app/keystore/modivka-release.jks
+          cat > android/key.properties <<EOF2
+storePassword=$KEYSTORE_PASSWORD
+keyPassword=$KEY_PASSWORD
+keyAlias=$KEY_ALIAS
+storeFile=keystore/modivka-release.jks
+EOF2
+
           test -f android/key.properties
 
           echo "Release signing prepared."
 
       - name: Build release APK
-        run: flutter build apk --release
+        shell: bash
+        run: |
+          set -e
+
+          echo "===== BUILD RELEASE APK ====="
+
+          flutter clean
+          flutter pub get
+
+          flutter build apk --release --verbose
+
+          test -f build/app/outputs/flutter-apk/app-release.apk
+
+          echo "APK BUILD SUCCESSFUL."
 
       - name: Prepare release package
+        shell: bash
         run: |
           set -e
 
           mkdir -p release
 
-          cp build/app/outputs/flutter-apk/app-release.apk \
+          cp \
+            build/app/outputs/flutter-apk/app-release.apk \
             release/Modivka-Studio-release.apk
 
           cd release
 
-          zip ../Modivka-Studio-${{ github.run_number }}.zip \
+          zip \
+            ../Modivka-Studio-${{ github.run_number }}.zip \
             Modivka-Studio-release.apk
+
+          test -f "../Modivka-Studio-${{ github.run_number }}.zip"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -137,8 +231,10 @@ jobs:
           files: Modivka-Studio-${{ github.run_number }}.zip
           generate_release_notes: true
 
-      - name: Cleanup signing files
+      - name: Cleanup signing and temporary files
         if: always()
+        shell: bash
         run: |
           rm -f android/key.properties
           rm -f android/app/keystore/modivka-release.jks
+          rm -f android/app/build.gradle.kts.workflow-backup
