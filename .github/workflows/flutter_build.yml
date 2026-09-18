@@ -14,10 +14,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Java 17
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -30,94 +31,70 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Setup Android SDK 36
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android SDK 36
+      - name: Prepare Android SDK
+        shell: bash
         run: |
-          sdkmanager "platform-tools"
-          sdkmanager "platforms;android-36"
-          sdkmanager "build-tools;35.0.0"
-          yes | sdkmanager --licenses || true
+          set -e
 
-      - name: Verify Android environment
-        run: |
-          echo "===== JAVA ====="
-          java -version
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
 
-          echo "===== FLUTTER ====="
-          flutter --version
+          yes | sdkmanager --licenses >/dev/null || true
 
-          echo "===== ANDROID SDK ====="
-          sdkmanager --list_installed | grep -E \
-            "platforms;android-36|build-tools|platform-tools" || true
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-36"
 
-      - name: Prepare Android project
-        run: |
-          mkdir -p android/app
-          mkdir -p android/keystore
+      - name: Flutter Doctor
+        run: flutter doctor -v
 
-      - name: Decode release keystore
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode \
-            > android/keystore/modivka-release.jks
-
-      - name: Create key.properties
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          cat > android/key.properties <<EOF2
-          storePassword=$KEYSTORE_PASSWORD
-          keyPassword=$KEY_PASSWORD
-          keyAlias=$KEY_ALIAS
-          storeFile=keystore/modivka-release.jks
-          EOF2
-
-      - name: Flutter pub get
+      - name: Flutter Pub Get
         run: flutter pub get
 
-      - name: Flutter analyze
+      - name: Flutter Analyze
         run: flutter analyze
 
-      - name: Dart format check
+      - name: Dart Format Check
         run: dart format --output=none --set-exit-if-changed lib
 
-      - name: Git diff check
+      - name: Git Diff Check
         run: git diff --check
 
-      - name: Verify compileSdk
-        run: |
-          grep -n -E "compileSdk|targetSdk|minSdk" \
-            android/app/build.gradle.kts || true
-
-      - name: Build release APK
-        run: |
-          flutter clean
-          flutter pub get
-          flutter build apk --release
+      - name: Build Release APK
+        run: flutter build apk --release
 
       - name: Verify APK
         run: |
-          test -f build/app/outputs/flutter-apk/app-release.apk
-          ls -lh build/app/outputs/flutter-apk/app-release.apk
+          set -e
 
-      - name: Prepare release
+          APK="build/app/outputs/flutter-apk/app-release.apk"
+
+          test -f "$APK"
+
+          echo "APK FOUND:"
+          ls -lh "$APK"
+
+      - name: Prepare Release
         run: |
+          set -e
+
           mkdir -p release
-          cp build/app/outputs/flutter-apk/app-release.apk \
+
+          cp \
+            build/app/outputs/flutter-apk/app-release.apk \
             release/Modivka-Studio-release.apk
 
       - name: Create ZIP
         run: |
+          set -e
+
           cd release
-          zip ../Modivka-Studio-${{ github.run_number }}.zip \
+
+          zip \
+            ../Modivka-Studio-${{ github.run_number }}.zip \
             Modivka-Studio-release.apk
 
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Modivka-Studio-${{ github.run_number }}
@@ -130,9 +107,3 @@ jobs:
           name: Modivka Studio v1.0.${{ github.run_number }}
           files: Modivka-Studio-${{ github.run_number }}.zip
           generate_release_notes: true
-
-      - name: Cleanup signing files
-        if: always()
-        run: |
-          rm -f android/key.properties
-          rm -f android/keystore/modivka-release.jks
