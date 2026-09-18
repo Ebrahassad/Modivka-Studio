@@ -45,11 +45,7 @@ jobs:
             -name sdkmanager \
             | head -n 1)"
 
-          if [ -z "$SDKMANAGER" ]; then
-            echo "ERROR: sdkmanager was not found"
-            find "$SDK/cmdline-tools" -maxdepth 3 -type f 2>/dev/null || true
-            exit 1
-          fi
+          test -n "$SDKMANAGER"
 
           echo "sdkmanager: $SDKMANAGER"
 
@@ -58,6 +54,40 @@ jobs:
           "$SDKMANAGER" \
             "platform-tools" \
             "platforms;android-36"
+
+      - name: Configure project compileSdk
+        shell: bash
+        run: |
+          set -e
+
+          FILE="android/app/build.gradle.kts"
+
+          test -f "$FILE"
+
+          echo "===== BEFORE ====="
+          grep -n "compileSdk" "$FILE"
+
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("android/app/build.gradle.kts")
+          s = p.read_text()
+
+          old = "compileSdk = flutter.compileSdkVersion"
+          new = "compileSdk = 36"
+
+          if old in s:
+              s = s.replace(old, new, 1)
+
+          p.write_text(s)
+          PY
+
+          echo "===== AFTER ====="
+          grep -n "compileSdk" "$FILE"
+
+          grep -q "compileSdk = 36" "$FILE"
+
+          echo "compileSdk 36 confirmed."
 
       - name: Flutter Doctor
         run: flutter doctor -v
@@ -85,13 +115,11 @@ jobs:
 
           test -f "$APK"
 
-          echo "APK FOUND:"
+          echo "===== APK ====="
           ls -lh "$APK"
 
       - name: Prepare Release
         run: |
-          set -e
-
           mkdir -p release
 
           cp \
@@ -101,7 +129,9 @@ jobs:
       - name: Create ZIP
         run: |
           cd release
-          zip ../Modivka-Studio-${{ github.run_number }}.zip \
+
+          zip \
+            ../Modivka-Studio-${{ github.run_number }}.zip \
             Modivka-Studio-release.apk
 
       - name: Upload APK
