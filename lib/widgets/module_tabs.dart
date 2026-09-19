@@ -13,7 +13,6 @@ class ModuleTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const labels = ['Images', 'Text', 'Video'];
-
     const icons = [
       Icons.image_outlined,
       Icons.text_fields_rounded,
@@ -21,34 +20,39 @@ class ModuleTabs extends StatelessWidget {
     ];
 
     return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      height: 82,
+      color: const Color(0xFF0B0A11),
       child: Row(
         children: List.generate(labels.length, (index) {
-          final selected = selectedIndex == index;
-
+          final selected = index == selectedIndex;
           return Expanded(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 3),
+              padding: const EdgeInsets.fromLTRB(10, 9, 10, 9),
               child: Material(
-                color: selected
-                    ? Theme.of(context).colorScheme.primary.withAlpha(45)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(10),
+                color: selected ? const Color(0xFF4A3EC6) : Colors.transparent,
+                borderRadius: BorderRadius.circular(18),
                 child: InkWell(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(18),
                   onTap: () => onChanged(index),
-                  child: Center(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: selected
+                            ? const Color(0xFF7C6CFF)
+                            : Colors.white.withAlpha(10),
+                      ),
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(icons[index], size: 18),
-                        const SizedBox(width: 7),
+                        Icon(icons[index], size: 26),
+                        const SizedBox(width: 10),
                         Text(
                           labels[index],
                           style: TextStyle(
-                            fontWeight:
-                                selected ? FontWeight.w800 : FontWeight.w600,
+                            fontSize: 17,
+                            fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
                           ),
                         ),
                       ],

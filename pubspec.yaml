@@ -1,5 +1,5 @@
 name: modivka_studio
-description: Modivka Studio - Image, Text and Video workspace.
+description: Modivka Studio - a complete modular image, text and video creation and conversion workspace.
 publish_to: "none"
 
 version: 1.0.0+1
@@ -12,10 +12,13 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
+  archive: ^4.3.0
+  ffmpeg_kit_flutter_new_video: ^2.5.2
   file_picker: ^13.1.0
-  path_provider: ^2.1.5
+  image: ^4.10.1
+  path_provider: ^2.1.6
   share_plus: ^13.3.0
-  video_player: ^2.9.2
+  video_player: ^2.14.0
 
 dev_dependencies:
   flutter_test:
@@ -24,3 +27,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/modivka_icon.png

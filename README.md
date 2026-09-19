@@ -1,17 +1,27 @@
-# modivka_studio
+# Modivka Studio
 
-A new Flutter project.
+Modivka Studio is a modular creative workspace for images, text, video and format conversion.
 
-## Getting Started
+## Workspace
 
-This project is a starting point for a Flutter application.
+- Images: layer-based canvas, smart guides, snapping, transform controls, text layers, history, copy/paste, export and conversion.
+- Text: editable document workspace with save-as, format conversion, wrapping and compression.
+- Video: video preview, timeline, playback speed, mute, export, conversion and compression.
 
-A few resources to get you started if this is your first Flutter project:
+## Format tools
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Image output: PNG, JPG/JPEG, WebP, GIF, BMP, TIFF, TGA and ICO.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Text output: TXT, Markdown, HTML, CSS, JSON, XML, CSV, YAML, LOG, SQL, Dart, JavaScript and TypeScript.
+
+Video/media output: MP4, MOV, MKV, WebM, AVI, M4V, 3GP, MPEG/MPG, GIF, MP3, M4A and WAV.
+
+The universal converter lets a supported file be opened from any module and converted to another supported format.
+
+## Compression
+
+Files can be compressed into ZIP archives. Image and video export controls also include quality controls where the selected encoder supports them.
+
+## Android build
+
+The project targets the modern Flutter Android toolchain with API 36, Java 17 and Built-in Kotlin. Release signing is read from GitHub Actions Secrets; the keystore is never committed to the repository.

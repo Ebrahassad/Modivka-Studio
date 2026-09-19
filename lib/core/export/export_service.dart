@@ -1,7 +1,6 @@
-import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:path_provider/path_provider.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
 
 class ExportResult {
@@ -17,17 +16,27 @@ class ExportResult {
 class ExportService {
   const ExportService();
 
-  Future<ExportResult> saveBytes({
+  Future<ExportResult?> saveBytes({
     required Uint8List bytes,
     required String fileName,
+    required String mimeType,
+    List<String>? allowedExtensions,
   }) async {
-    final directory = await getApplicationDocumentsDirectory();
-    final file = File('${directory.path}/$fileName');
+    final uri = await FilePicker.saveFile(
+      dialogTitle: 'Save with Modivka Studio',
+      fileName: fileName,
+      bytes: bytes,
+      mimeType: mimeType,
+      type: FileType.custom,
+      allowedExtensions: allowedExtensions,
+    );
 
-    await file.writeAsBytes(bytes, flush: true);
+    if (uri == null) {
+      return null;
+    }
 
     return ExportResult(
-      path: file.path,
+      path: uri.scheme == 'file' ? uri.toFilePath() : uri.toString(),
       fileName: fileName,
     );
   }

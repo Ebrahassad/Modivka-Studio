@@ -17,16 +17,15 @@ class ItemStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (items.isEmpty) {
-      return const SizedBox(
-        height: 76,
-        child: Center(
-          child: Text('No items', style: TextStyle(color: Colors.white54)),
-        ),
-      );
+      return const SizedBox(height: 10);
     }
 
-    return SizedBox(
-      height: 82,
+    return Container(
+      height: 72,
+      decoration: BoxDecoration(
+        color: const Color(0xFF0C0B11),
+        border: Border(top: BorderSide(color: Colors.white.withAlpha(12))),
+      ),
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
         scrollDirection: Axis.horizontal,
@@ -36,16 +35,17 @@ class ItemStrip extends StatelessWidget {
           final item = items[index];
           final selected = index == selectedIndex;
 
-          return GestureDetector(
+          return InkWell(
             onTap: () => onSelected(index),
+            borderRadius: BorderRadius.circular(11),
             child: Container(
-              width: 72,
+              width: 58,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(9),
+                borderRadius: BorderRadius.circular(11),
                 border: Border.all(
                   color: selected
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.white12,
+                      ? const Color(0xFF7567FF)
+                      : Colors.white.withAlpha(15),
                   width: selected ? 2 : 1,
                 ),
               ),
@@ -71,15 +71,15 @@ class ItemStrip extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _fileIcon(),
-        const SizedBox(height: 3),
+        const SizedBox(height: 2),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 3),
           child: Text(
             item.name,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 9),
+            style: const TextStyle(fontSize: 8.5),
           ),
         ),
       ],
@@ -87,6 +87,6 @@ class ItemStrip extends StatelessWidget {
   }
 
   Widget _fileIcon() {
-    return const Icon(Icons.insert_drive_file_outlined, size: 26);
+    return const Icon(Icons.insert_drive_file_outlined, size: 23);
   }
 }

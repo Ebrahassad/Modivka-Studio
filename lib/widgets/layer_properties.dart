@@ -73,15 +73,10 @@ class LayerProperties extends StatelessWidget {
     final current = layer;
 
     return Container(
-      width: 250,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF101016),
-        border: Border(
-          left: BorderSide(
-            color: Colors.white.withAlpha(18),
-          ),
-        ),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(18, 4, 18, 18),
+      decoration: const BoxDecoration(
+        color: Color(0xFF101016),
       ),
       child: current == null
           ? const Center(
@@ -94,12 +89,22 @@ class LayerProperties extends StatelessWidget {
             )
           : ListView(
               children: [
-                const Text(
-                  'Layer Properties',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                  ),
+                Row(
+                  children: [
+                    const Icon(Icons.tune_rounded, size: 20),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Layer Properties',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    if (current.locked)
+                      const Icon(Icons.lock_rounded, size: 18, color: Colors.amber),
+                  ],
                 ),
                 const SizedBox(height: 10),
                 Text(

@@ -8,26 +8,24 @@ import '../models/workspace_item.dart';
 class FileService {
   const FileService();
 
-  Future<List<WorkspaceItem>> openFiles({
-    required WorkspaceType type,
-  }) async {
+  Future<List<WorkspaceItem>> openFiles({required WorkspaceType type}) async {
     final files = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: _extensions(type),
     );
 
-    if (files.isEmpty) {
-      return const [];
-    }
-
-    return files.map((file) {
-      return WorkspaceItem(
-        name: file.name,
-        path: file.path ?? '',
-        type: type,
-        bytes: _readPlatformFileBytes(file),
+    final items = <WorkspaceItem>[];
+    for (final file in files) {
+      items.add(
+        WorkspaceItem(
+          name: file.name,
+          path: _pathOf(file),
+          type: type,
+          bytes: await file.readAsBytes(),
+        ),
       );
-    }).toList();
+    }
+    return items;
   }
 
   Future<WorkspaceItem?> openSingleImage() async {
@@ -42,19 +40,41 @@ class FileService {
 
     return WorkspaceItem(
       name: file.name,
-      path: file.path ?? '',
+      path: _pathOf(file),
       type: WorkspaceType.image,
-      bytes: _readPlatformFileBytes(file),
+      bytes: await file.readAsBytes(),
     );
   }
 
-  Uint8List? _readPlatformFileBytes(PlatformFile file) {
-    if (file.path == null || file.path!.isEmpty) {
+  String _pathOf(PlatformFile file) {
+    final path = file.path;
+    if (path != null && path.isNotEmpty) {
+      return path;
+    }
+    if (file.uri.scheme == 'file') {
+      return file.uri.toFilePath();
+    }
+    return '';
+  }
+
+  Future<Uint8List?> readBytes(String path) async {
+    if (path.isEmpty) return null;
+    try {
+      return await File(path).readAsBytes();
+    } catch (_) {
       return null;
     }
+  }
 
+  Future<String?> readText(String path) async {
+    final bytes = await readBytes(path);
+    if (bytes == null) return null;
+    return String.fromCharCodes(bytes);
+  }
+
+  Future<Uint8List?> readBytesFromFile(PlatformFile file) async {
     try {
-      return File(file.path!).readAsBytesSync();
+      return await file.readAsBytes();
     } catch (_) {
       return null;
     }
@@ -63,37 +83,11 @@ class FileService {
   List<String> _extensions(WorkspaceType type) {
     switch (type) {
       case WorkspaceType.image:
-        return ['jpg', 'jpeg', 'png', 'webp', 'bmp', 'gif'];
-
+        return ['jpg', 'jpeg', 'png', 'webp', 'bmp', 'gif', 'tiff', 'tga', 'ico'];
       case WorkspaceType.text:
-        return ['txt', 'md', 'json', 'xml', 'csv', 'log'];
-
+        return ['txt', 'md', 'html', 'css', 'json', 'xml', 'csv', 'yaml', 'log', 'sql', 'dart', 'js', 'ts'];
       case WorkspaceType.video:
-        return ['mp4', 'mov', 'mkv', 'webm', 'avi', '3gp'];
-    }
-  }
-
-  Future<String?> readText(String path) async {
-    if (path.isEmpty) {
-      return null;
-    }
-
-    try {
-      return await File(path).readAsString();
-    } catch (_) {
-      return null;
-    }
-  }
-
-  Future<Uint8List?> readBytes(String path) async {
-    if (path.isEmpty) {
-      return null;
-    }
-
-    try {
-      return await File(path).readAsBytes();
-    } catch (_) {
-      return null;
+        return ['mp4', 'mov', 'mkv', 'webm', 'avi', 'm4v', '3gp', 'mpeg', 'mpg', 'm3u8'];
     }
   }
 }

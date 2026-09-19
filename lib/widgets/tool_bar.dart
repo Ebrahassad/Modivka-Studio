@@ -20,29 +20,34 @@ class ModivkaToolBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+      height: 54,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withAlpha(210),
+        color: const Color(0xFF111019),
         border: Border(
-          top: BorderSide(color: Colors.white.withAlpha(10)),
           bottom: BorderSide(color: Colors.white.withAlpha(10)),
         ),
       ),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: tools.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 2),
+        separatorBuilder: (_, __) => const SizedBox(width: 3),
         itemBuilder: (context, index) {
           final tool = tools[index];
-
           return Tooltip(
             message: tool.name,
-            waitDuration: const Duration(milliseconds: 350),
-            child: IconButton(
-              onPressed: tool.onPressed,
-              icon: Icon(tool.icon),
-              iconSize: 21,
+            child: Material(
+              color: tool.onPressed == null
+                  ? Colors.transparent
+                  : const Color(0xFF1B1927),
+              borderRadius: BorderRadius.circular(11),
+              child: IconButton(
+                onPressed: tool.onPressed,
+                icon: Icon(tool.icon),
+                iconSize: 22,
+                color: tool.onPressed == null ? Colors.white24 : Colors.white,
+                splashRadius: 22,
+              ),
             ),
           );
         },

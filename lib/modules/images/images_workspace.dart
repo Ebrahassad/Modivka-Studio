@@ -6,7 +6,7 @@ import '../../core/models/workspace_item.dart';
 import '../../widgets/image_canvas.dart';
 import '../../widgets/item_strip.dart';
 import '../../widgets/layer_properties.dart';
-import '../../widgets/layers_panel.dart';
+import '../../widgets/layers_strip.dart';
 import '../../widgets/tool_bar.dart';
 
 class ImagesWorkspace extends StatefulWidget {
@@ -15,6 +15,9 @@ class ImagesWorkspace extends StatefulWidget {
   final ValueChanged<int> onSelected;
   final VoidCallback onAddImage;
   final VoidCallback onAddLayer;
+  final VoidCallback onSave;
+  final VoidCallback onConvert;
+  final VoidCallback onCompress;
 
   const ImagesWorkspace({
     super.key,
@@ -23,6 +26,9 @@ class ImagesWorkspace extends StatefulWidget {
     required this.onSelected,
     required this.onAddImage,
     required this.onAddLayer,
+    required this.onSave,
+    required this.onConvert,
+    required this.onCompress,
   });
 
   @override
@@ -59,6 +65,24 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
   }
 
   void _syncLayers() {
+    if (_layers.isEmpty) {
+      _layers.add(
+        CanvasLayer(
+          id: 'text-default',
+          name: 'Modivka Studio',
+          type: LayerType.text,
+          text: 'Modivka Studio',
+          x: 360,
+          y: 335,
+          width: 480,
+          height: 100,
+          fontSize: 56,
+          bold: true,
+          textAlignment: TextAlignment.center,
+        ),
+      );
+    }
+
     for (final item in widget.items) {
       final id =
           item.path.isEmpty ? '${item.name}-${item.hashCode}' : item.path;
@@ -906,106 +930,52 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return KeyboardListener(
-      focusNode: _workspaceFocusNode,
-      onKeyEvent: _handleWorkspaceKey,
-      child: Column(
-        children: [
-          ModivkaToolBar(
-            tools: [
-              ToolDefinition(
-                icon: Icons.add_photo_alternate_outlined,
-                name: 'Add Image',
-                onPressed: widget.onAddImage,
-              ),
-              ToolDefinition(
-                icon: Icons.layers_outlined,
-                name: 'Add Image Layer',
-                onPressed: widget.onAddLayer,
-              ),
-              ToolDefinition(
-                icon: Icons.text_fields_rounded,
-                name: 'Add Text Layer',
-                onPressed: _addTextLayer,
-              ),
-              const ToolDefinition(
-                icon: Icons.content_cut_rounded,
-                name: 'Crop',
-              ),
-              const ToolDefinition(
-                icon: Icons.rotate_right_rounded,
-                name: 'Rotate',
-              ),
-              const ToolDefinition(
-                icon: Icons.flip_rounded,
-                name: 'Flip',
-              ),
-              const ToolDefinition(
-                icon: Icons.zoom_in_rounded,
-                name: 'Zoom In',
-              ),
-              const ToolDefinition(
-                icon: Icons.zoom_out_rounded,
-                name: 'Zoom Out',
-              ),
-              const ToolDefinition(
-                icon: Icons.auto_fix_high_rounded,
-                name: 'Remove Background',
-              ),
-              ToolDefinition(
-                icon: Icons.undo_rounded,
-                name: 'Undo',
-                onPressed: _undo,
-              ),
-              ToolDefinition(
-                icon: Icons.redo_rounded,
-                name: 'Redo',
-                onPressed: _redo,
-              ),
-            ],
-          ),
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: _workspaceFocusNode.requestFocus,
-                    child: ImageCanvas(
-                      layers: _layers,
-                      selectedIndex: _selectedLayer,
-                      onSelected: (index) {
-                        setState(() {
-                          _selectedLayer = index;
-                        });
-                      },
-                      onMove: _moveSelected,
-                      onResize: _resizeSelected,
-                      onRotate: _rotateSelected,
+  Future<void> _showProperties() async {
+    if (_currentLayer == null) {
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: const Color(0xFF0F0E18),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+      ),
+      builder: (sheetContext) {
+        return FractionallySizedBox(
+          heightFactor: 0.88,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 12, 12, 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                  ),
+                    const Spacer(),
+                    IconButton(
+                      tooltip: 'Close',
+                      onPressed: () => Navigator.pop(sheetContext),
+                      icon: const Icon(Icons.close_rounded),
+                    ),
+                  ],
                 ),
-                LayersPanel(
-                  layers: _layers,
-                  selectedIndex: _selectedLayer,
-                  onSelected: (index) {
-                    setState(() {
-                      _selectedLayer = index;
-                    });
-                  },
-                  onVisibilityChanged: _toggleVisibility,
-                  onLockChanged: _toggleLayerLock,
-                  onAdd: _addTextLayer,
-                  onDelete: _deleteSelected,
-                  onDuplicate: _duplicateSelected,
-                  onMoveUp: _moveUp,
-                  onMoveDown: _moveDown,
-                ),
-                LayerProperties(
+              ),
+              Expanded(
+                child: LayerProperties(
                   layer: _currentLayer,
-                  onDelete: _deleteSelected,
+                  onDelete: () {
+                    Navigator.pop(sheetContext);
+                    _deleteSelected();
+                  },
                   onMoveUp: _moveUp,
                   onMoveDown: _moveDown,
                   onXChanged: _setX,
@@ -1035,10 +1005,134 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
                   onDistributeHorizontal: _distributeHorizontal,
                   onDistributeVertical: _distributeVertical,
                 ),
-              ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return KeyboardListener(
+      focusNode: _workspaceFocusNode,
+      onKeyEvent: _handleWorkspaceKey,
+      child: Column(
+        children: [
+          ModivkaToolBar(
+            tools: [
+              ToolDefinition(
+                icon: Icons.add_photo_alternate_outlined,
+                name: 'Add image',
+                onPressed: widget.onAddImage,
+              ),
+              ToolDefinition(
+                icon: Icons.image_outlined,
+                name: 'Image layer',
+                onPressed: widget.onAddLayer,
+              ),
+              ToolDefinition(
+                icon: Icons.save_outlined,
+                name: 'Save / export',
+                onPressed: widget.onSave,
+              ),
+              ToolDefinition(
+                icon: Icons.transform_rounded,
+                name: 'Convert',
+                onPressed: widget.onConvert,
+              ),
+              ToolDefinition(
+                icon: Icons.compress_rounded,
+                name: 'Compress',
+                onPressed: widget.onCompress,
+              ),
+              ToolDefinition(
+                icon: Icons.text_fields_rounded,
+                name: 'Add text',
+                onPressed: _addTextLayer,
+              ),
+              ToolDefinition(
+                icon: Icons.tune_rounded,
+                name: 'Layer properties',
+                onPressed: _currentLayer == null ? null : _showProperties,
+              ),
+              const ToolDefinition(
+                icon: Icons.crop_rounded,
+                name: 'Crop',
+              ),
+              const ToolDefinition(
+                icon: Icons.rotate_right_rounded,
+                name: 'Rotate',
+              ),
+              const ToolDefinition(
+                icon: Icons.flip_rounded,
+                name: 'Flip',
+              ),
+              const ToolDefinition(
+                icon: Icons.auto_fix_high_rounded,
+                name: 'Enhance',
+              ),
+              ToolDefinition(
+                icon: Icons.undo_rounded,
+                name: 'Undo',
+                onPressed: _canUndo ? _undo : null,
+              ),
+              ToolDefinition(
+                icon: Icons.redo_rounded,
+                name: 'Redo',
+                onPressed: _canRedo ? _redo : null,
+              ),
+            ],
+          ),
+          LayersStrip(
+            layers: _layers,
+            selectedIndex: _selectedLayer,
+            onSelected: (index) {
+              setState(() => _selectedLayer = index);
+              _workspaceFocusNode.requestFocus();
+            },
+            onVisibilityChanged: _toggleVisibility,
+            onLockChanged: _toggleLayerLock,
+            onAdd: _addTextLayer,
+            onDelete: _deleteSelected,
+            onDuplicate: _duplicateSelected,
+            onMoveUp: _moveUp,
+            onMoveDown: _moveDown,
+            onProperties: _showProperties,
+          ),
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF05050A),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: Colors.white.withAlpha(12)),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x55000000),
+                    blurRadius: 20,
+                    offset: Offset(0, 8),
+                  ),
+                ],
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _workspaceFocusNode.requestFocus,
+                child: ImageCanvas(
+                  layers: _layers,
+                  selectedIndex: _selectedLayer,
+                  onSelected: (index) {
+                    setState(() => _selectedLayer = index);
+                  },
+                  onMove: _moveSelected,
+                  onResize: _resizeSelected,
+                  onRotate: _rotateSelected,
+                ),
+              ),
             ),
           ),
-          const Divider(height: 1),
           ItemStrip(
             items: widget.items,
             selectedIndex: widget.selectedIndex,
