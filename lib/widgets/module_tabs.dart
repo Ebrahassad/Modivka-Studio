@@ -52,7 +52,8 @@ class ModuleTabs extends StatelessWidget {
                           labels[index],
                           style: TextStyle(
                             fontSize: 17,
-                            fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
+                            fontWeight:
+                                selected ? FontWeight.w900 : FontWeight.w700,
                           ),
                         ),
                       ],

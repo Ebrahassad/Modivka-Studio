@@ -13,7 +13,8 @@ class CompressionService {
     }
 
     final temp = await getTemporaryDirectory();
-    final zipPath = '${temp.path}/modivka_bundle_${DateTime.now().millisecondsSinceEpoch}.zip';
+    final zipPath =
+        '${temp.path}/modivka_bundle_${DateTime.now().millisecondsSinceEpoch}.zip';
     final encoder = ZipFileEncoder();
     encoder.create(zipPath, level: level);
 

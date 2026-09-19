@@ -139,7 +139,8 @@ Future<FormatActionConfig?> showFormatActionSheet(
                       min: 40,
                       max: 100,
                       value: quality,
-                      onChanged: (value) => setSheetState(() => quality = value),
+                      onChanged: (value) =>
+                          setSheetState(() => quality = value),
                     ),
                   ],
                   const Spacer(),

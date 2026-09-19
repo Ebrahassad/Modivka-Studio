@@ -184,7 +184,10 @@ class _VideoWorkspaceState extends State<VideoWorkspace> {
   }
 
   WorkspaceItem? get _currentItem {
-    if (widget.selectedIndex < 0 || widget.selectedIndex >= widget.items.length) return null;
+    if (widget.selectedIndex < 0 ||
+        widget.selectedIndex >= widget.items.length) {
+      return null;
+    }
     return widget.items[widget.selectedIndex];
   }
 
@@ -197,7 +200,8 @@ class _VideoWorkspaceState extends State<VideoWorkspace> {
         child: AlertDialog(
           content: Row(
             children: [
-              const SizedBox(width: 24, height: 24, child: CircularProgressIndicator()),
+              const SizedBox(
+                  width: 24, height: 24, child: CircularProgressIndicator()),
               const SizedBox(width: 16),
               Expanded(child: Text(text)),
             ],
@@ -234,23 +238,37 @@ class _VideoWorkspaceState extends State<VideoWorkspace> {
     final position = controller?.value.position ?? Duration.zero;
     final durationMs = duration.inMilliseconds.toDouble();
     final safeMax = durationMs <= 0 ? 1.0 : durationMs;
-    final positionMs = position.inMilliseconds.toDouble().clamp(0.0, safeMax).toDouble();
+    final positionMs =
+        position.inMilliseconds.toDouble().clamp(0.0, safeMax).toDouble();
 
     return Column(
       children: [
         ModivkaToolBar(
           tools: [
-            ToolDefinition(icon: Icons.video_library_outlined, name: 'Open', onPressed: widget.onOpen),
-            ToolDefinition(icon: Icons.save_outlined, name: 'Save / Export', onPressed: _saveAs),
-            ToolDefinition(icon: Icons.transform_rounded, name: 'Convert', onPressed: _convert),
-            ToolDefinition(icon: Icons.compress_rounded, name: 'Compress', onPressed: _compress),
+            ToolDefinition(
+                icon: Icons.video_library_outlined,
+                name: 'Open',
+                onPressed: widget.onOpen),
+            ToolDefinition(
+                icon: Icons.save_outlined,
+                name: 'Save / Export',
+                onPressed: _saveAs),
+            ToolDefinition(
+                icon: Icons.transform_rounded,
+                name: 'Convert',
+                onPressed: _convert),
+            ToolDefinition(
+                icon: Icons.compress_rounded,
+                name: 'Compress',
+                onPressed: _compress),
             ToolDefinition(
               icon: Icons.speed_rounded,
               name: 'Speed',
               onPressed: controller == null ? null : () => _showSpeedSheet(),
             ),
             ToolDefinition(
-              icon: _muted ? Icons.volume_off_outlined : Icons.volume_up_outlined,
+              icon:
+                  _muted ? Icons.volume_off_outlined : Icons.volume_up_outlined,
               name: 'Mute',
               onPressed: controller == null ? null : () => _toggleMute(),
             ),
@@ -272,16 +290,19 @@ class _VideoWorkspaceState extends State<VideoWorkspace> {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               children: [
-                Text(_formatDuration(position), style: const TextStyle(fontSize: 11)),
+                Text(_formatDuration(position),
+                    style: const TextStyle(fontSize: 11)),
                 Expanded(
                   child: Slider(
                     min: 0,
                     max: safeMax,
                     value: positionMs,
-                    onChanged: (value) => controller.seekTo(Duration(milliseconds: value.round())),
+                    onChanged: (value) => controller
+                        .seekTo(Duration(milliseconds: value.round())),
                   ),
                 ),
-                Text(_formatDuration(duration), style: const TextStyle(fontSize: 11)),
+                Text(_formatDuration(duration),
+                    style: const TextStyle(fontSize: 11)),
               ],
             ),
           ),
@@ -325,7 +346,8 @@ class _VideoWorkspaceState extends State<VideoWorkspace> {
               AnimatedOpacity(
                 duration: const Duration(milliseconds: 180),
                 opacity: controller.value.isPlaying ? 0.0 : 1.0,
-                child: const Icon(Icons.play_circle_filled_rounded, size: 72, color: Colors.white70),
+                child: const Icon(Icons.play_circle_filled_rounded,
+                    size: 72, color: Colors.white70),
               ),
             ],
           ),
@@ -356,13 +378,16 @@ class _VideoWorkspaceState extends State<VideoWorkspace> {
               padding: EdgeInsets.fromLTRB(20, 4, 20, 8),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Text('Playback speed', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
+                child: Text('Playback speed',
+                    style:
+                        TextStyle(fontSize: 19, fontWeight: FontWeight.w900)),
               ),
             ),
             for (final value in [0.5, 0.75, 1.0, 1.25, 1.5, 2.0])
               ListTile(
                 title: Text('$value×'),
-                trailing: _speed == value ? const Icon(Icons.check_rounded) : null,
+                trailing:
+                    _speed == value ? const Icon(Icons.check_rounded) : null,
                 onTap: () {
                   setState(() => _speed = value);
                   controller.setPlaybackSpeed(value);

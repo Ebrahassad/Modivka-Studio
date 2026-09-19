@@ -197,15 +197,32 @@ class _TextWorkspaceState extends State<TextWorkspace> {
       children: [
         ModivkaToolBar(
           tools: [
-            ToolDefinition(icon: Icons.note_add_outlined, name: 'New', onPressed: _newText),
-            ToolDefinition(icon: Icons.folder_open_outlined, name: 'Open', onPressed: widget.onOpen),
-            ToolDefinition(icon: Icons.save_outlined, name: 'Save as', onPressed: _saveAs),
-            ToolDefinition(icon: Icons.transform_rounded, name: 'Convert', onPressed: _convert),
-            ToolDefinition(icon: Icons.compress_rounded, name: 'Compress', onPressed: _compress),
-            ToolDefinition(icon: Icons.wrap_text_rounded, name: 'Word wrap', onPressed: () => setState(() => _wordWrap = !_wordWrap)),
+            ToolDefinition(
+                icon: Icons.note_add_outlined,
+                name: 'New',
+                onPressed: _newText),
+            ToolDefinition(
+                icon: Icons.folder_open_outlined,
+                name: 'Open',
+                onPressed: widget.onOpen),
+            ToolDefinition(
+                icon: Icons.save_outlined, name: 'Save as', onPressed: _saveAs),
+            ToolDefinition(
+                icon: Icons.transform_rounded,
+                name: 'Convert',
+                onPressed: _convert),
+            ToolDefinition(
+                icon: Icons.compress_rounded,
+                name: 'Compress',
+                onPressed: _compress),
+            ToolDefinition(
+                icon: Icons.wrap_text_rounded,
+                name: 'Word wrap',
+                onPressed: () => setState(() => _wordWrap = !_wordWrap)),
             const ToolDefinition(icon: Icons.search_rounded, name: 'Find'),
             const ToolDefinition(icon: Icons.format_bold_rounded, name: 'Bold'),
-            const ToolDefinition(icon: Icons.format_italic_rounded, name: 'Italic'),
+            const ToolDefinition(
+                icon: Icons.format_italic_rounded, name: 'Italic'),
           ],
         ),
         Expanded(
@@ -250,10 +267,12 @@ class _TextWorkspaceState extends State<TextWorkspace> {
                       border: Border.all(color: Colors.white.withAlpha(14)),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 7),
                       child: Text(
                         '${_editor.text.length} chars${_dirty ? ' • edited' : ''}',
-                        style: const TextStyle(fontSize: 11, color: Colors.white60),
+                        style: const TextStyle(
+                            fontSize: 11, color: Colors.white60),
                       ),
                     ),
                   ),

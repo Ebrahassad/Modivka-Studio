@@ -103,7 +103,8 @@ class LayerProperties extends StatelessWidget {
                       ),
                     ),
                     if (current.locked)
-                      const Icon(Icons.lock_rounded, size: 18, color: Colors.amber),
+                      const Icon(Icons.lock_rounded,
+                          size: 18, color: Colors.amber),
                   ],
                 ),
                 const SizedBox(height: 10),

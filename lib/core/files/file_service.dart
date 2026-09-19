@@ -83,11 +83,46 @@ class FileService {
   List<String> _extensions(WorkspaceType type) {
     switch (type) {
       case WorkspaceType.image:
-        return ['jpg', 'jpeg', 'png', 'webp', 'bmp', 'gif', 'tiff', 'tga', 'ico'];
+        return [
+          'jpg',
+          'jpeg',
+          'png',
+          'webp',
+          'bmp',
+          'gif',
+          'tiff',
+          'tga',
+          'ico'
+        ];
       case WorkspaceType.text:
-        return ['txt', 'md', 'html', 'css', 'json', 'xml', 'csv', 'yaml', 'log', 'sql', 'dart', 'js', 'ts'];
+        return [
+          'txt',
+          'md',
+          'html',
+          'css',
+          'json',
+          'xml',
+          'csv',
+          'yaml',
+          'log',
+          'sql',
+          'dart',
+          'js',
+          'ts'
+        ];
       case WorkspaceType.video:
-        return ['mp4', 'mov', 'mkv', 'webm', 'avi', 'm4v', '3gp', 'mpeg', 'mpg', 'm3u8'];
+        return [
+          'mp4',
+          'mov',
+          'mkv',
+          'webm',
+          'avi',
+          'm4v',
+          '3gp',
+          'mpeg',
+          'mpg',
+          'm3u8'
+        ];
     }
   }
 }

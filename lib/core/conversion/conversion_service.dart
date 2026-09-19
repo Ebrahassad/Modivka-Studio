@@ -187,7 +187,8 @@ class ConversionService {
 
   int _qv(int quality) => 8 - ((quality.clamp(40, 95) - 40) ~/ 10);
 
-  String _safeName(String value) => value.replaceAll(RegExp(r'[^A-Za-z0-9._-]+'), '_');
+  String _safeName(String value) =>
+      value.replaceAll(RegExp(r'[^A-Za-z0-9._-]+'), '_');
 
   String _shellQuote(String value) => "'${value.replaceAll("'", "'\\''")}'";
 }

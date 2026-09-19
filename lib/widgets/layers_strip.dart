@@ -116,7 +116,8 @@ class LayersStrip extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFF211C3A),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFF6B5CFF).withAlpha(100)),
+                border:
+                    Border.all(color: const Color(0xFF6B5CFF).withAlpha(100)),
               ),
               child: const Row(
                 children: [

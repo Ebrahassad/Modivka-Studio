@@ -43,24 +43,65 @@ class ModivkaTopBar extends StatelessWidget {
             ),
             onSelected: (value) {
               switch (value) {
-                case 'new': onNew(); break;
-                case 'open': onOpen(); break;
-                case 'save': onSave(); break;
-                case 'convert': onConvert(); break;
-                case 'compress': onCompress(); break;
-                case 'settings': onSettings(); break;
-                case 'about': onAbout(); break;
+                case 'new':
+                  onNew();
+                  break;
+                case 'open':
+                  onOpen();
+                  break;
+                case 'save':
+                  onSave();
+                  break;
+                case 'convert':
+                  onConvert();
+                  break;
+                case 'compress':
+                  onCompress();
+                  break;
+                case 'settings':
+                  onSettings();
+                  break;
+                case 'about':
+                  onAbout();
+                  break;
               }
             },
             itemBuilder: (context) => const [
-              PopupMenuItem(value: 'new', child: ListTile(leading: Icon(Icons.note_add_outlined), title: Text('New project'))),
-              PopupMenuItem(value: 'open', child: ListTile(leading: Icon(Icons.folder_open_outlined), title: Text('Open'))),
-              PopupMenuItem(value: 'save', child: ListTile(leading: Icon(Icons.save_outlined), title: Text('Save / Export'))),
-              PopupMenuItem(value: 'convert', child: ListTile(leading: Icon(Icons.transform_rounded), title: Text('Convert format'))),
-              PopupMenuItem(value: 'compress', child: ListTile(leading: Icon(Icons.compress_rounded), title: Text('Compress files'))),
+              PopupMenuItem(
+                  value: 'new',
+                  child: ListTile(
+                      leading: Icon(Icons.note_add_outlined),
+                      title: Text('New project'))),
+              PopupMenuItem(
+                  value: 'open',
+                  child: ListTile(
+                      leading: Icon(Icons.folder_open_outlined),
+                      title: Text('Open'))),
+              PopupMenuItem(
+                  value: 'save',
+                  child: ListTile(
+                      leading: Icon(Icons.save_outlined),
+                      title: Text('Save / Export'))),
+              PopupMenuItem(
+                  value: 'convert',
+                  child: ListTile(
+                      leading: Icon(Icons.transform_rounded),
+                      title: Text('Convert format'))),
+              PopupMenuItem(
+                  value: 'compress',
+                  child: ListTile(
+                      leading: Icon(Icons.compress_rounded),
+                      title: Text('Compress files'))),
               PopupMenuDivider(),
-              PopupMenuItem(value: 'settings', child: ListTile(leading: Icon(Icons.settings_outlined), title: Text('Settings'))),
-              PopupMenuItem(value: 'about', child: ListTile(leading: Icon(Icons.info_outline), title: Text('About'))),
+              PopupMenuItem(
+                  value: 'settings',
+                  child: ListTile(
+                      leading: Icon(Icons.settings_outlined),
+                      title: Text('Settings'))),
+              PopupMenuItem(
+                  value: 'about',
+                  child: ListTile(
+                      leading: Icon(Icons.info_outline), title: Text('About'))),
             ],
           ),
           const Spacer(),

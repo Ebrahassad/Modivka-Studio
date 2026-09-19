@@ -253,7 +253,8 @@ class _HomeScreenState extends State<HomeScreen> {
         paths.add(file.path!);
       } else {
         final bytes = await file.readAsBytes();
-        final tempFile = File('${temp.path}/modivka_${DateTime.now().microsecondsSinceEpoch}_${file.name}');
+        final tempFile = File(
+            '${temp.path}/modivka_${DateTime.now().microsecondsSinceEpoch}_${file.name}');
         await tempFile.writeAsBytes(bytes, flush: true);
         paths.add(tempFile.path);
       }
@@ -263,7 +264,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
     final saved = await _exportService.saveBytes(
       bytes: zip,
-      fileName: 'Modivka-Compressed-${DateTime.now().millisecondsSinceEpoch}.zip',
+      fileName:
+          'Modivka-Compressed-${DateTime.now().millisecondsSinceEpoch}.zip',
       mimeType: 'application/zip',
       allowedExtensions: const ['zip'],
     );
@@ -294,7 +296,8 @@ class _HomeScreenState extends State<HomeScreen> {
       final result = await _conversionService.convert(
         type: type,
         inputPath: file.path ?? file.uri.toFilePath(),
-        inputBytes: type == WorkspaceType.video ? null : await file.readAsBytes(),
+        inputBytes:
+            type == WorkspaceType.video ? null : await file.readAsBytes(),
         outputExtension: config.format.extension,
         baseName: config.fileName,
         quality: config.quality,
@@ -327,9 +330,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   WorkspaceType? _typeFromExtension(String name) {
     final ext = _extensionOf(name);
-    if (FormatCatalog.image.any((f) => f.extension == ext)) return WorkspaceType.image;
-    if (FormatCatalog.text.any((f) => f.extension == ext)) return WorkspaceType.text;
-    if (FormatCatalog.video.any((f) => f.extension == ext)) return WorkspaceType.video;
+    if (FormatCatalog.image.any((f) => f.extension == ext)) {
+      return WorkspaceType.image;
+    }
+    if (FormatCatalog.text.any((f) => f.extension == ext)) {
+      return WorkspaceType.text;
+    }
+    if (FormatCatalog.video.any((f) => f.extension == ext)) {
+      return WorkspaceType.video;
+    }
     if (['m3u8', 'ts'].contains(ext)) return WorkspaceType.video;
     return null;
   }
@@ -370,7 +379,9 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Studio Settings', style: TextStyle(fontSize: 21, fontWeight: FontWeight.w900)),
+                const Text('Studio Settings',
+                    style:
+                        TextStyle(fontSize: 21, fontWeight: FontWeight.w900)),
                 const SizedBox(height: 12),
                 SwitchListTile(
                   value: _showStatus,
@@ -384,7 +395,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 const ListTile(
                   leading: Icon(Icons.grid_4x4_rounded),
                   title: Text('Canvas helpers'),
-                  subtitle: Text('Smart guides, snapping and safe bounds are enabled.'),
+                  subtitle: Text(
+                      'Smart guides, snapping and safe bounds are enabled.'),
                 ),
                 const ListTile(
                   leading: Icon(Icons.palette_outlined),
@@ -404,9 +416,11 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       applicationName: 'Modivka Studio',
       applicationVersion: '1.0.0',
-      applicationIcon: Image.asset('assets/modivka_icon.png', width: 48, height: 48),
+      applicationIcon:
+          Image.asset('assets/modivka_icon.png', width: 48, height: 48),
       children: const [
-        Text('Create, edit, convert, export and compress images, text and video in one workspace.'),
+        Text(
+            'Create, edit, convert, export and compress images, text and video in one workspace.'),
       ],
     );
   }
@@ -420,7 +434,8 @@ class _HomeScreenState extends State<HomeScreen> {
         child: AlertDialog(
           content: Row(
             children: [
-              const SizedBox(width: 24, height: 24, child: CircularProgressIndicator()),
+              const SizedBox(
+                  width: 24, height: 24, child: CircularProgressIndicator()),
               const SizedBox(width: 14),
               Expanded(child: Text(message)),
             ],
@@ -432,7 +447,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _message(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -499,16 +515,20 @@ class _HomeScreenState extends State<HomeScreen> {
                             : '${_currentItem!.name} • ${_activeItems.length} open',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 10, color: Colors.white54),
+                        style: const TextStyle(
+                            fontSize: 10, color: Colors.white54),
                       ),
                     ),
                     InkWell(
                       onTap: _universalConverter,
                       child: const Row(
                         children: [
-                          Icon(Icons.swap_horiz_rounded, size: 15, color: Colors.white54),
+                          Icon(Icons.swap_horiz_rounded,
+                              size: 15, color: Colors.white54),
                           SizedBox(width: 4),
-                          Text('Universal converter', style: TextStyle(fontSize: 10, color: Colors.white54)),
+                          Text('Universal converter',
+                              style: TextStyle(
+                                  fontSize: 10, color: Colors.white54)),
                         ],
                       ),
                     ),
