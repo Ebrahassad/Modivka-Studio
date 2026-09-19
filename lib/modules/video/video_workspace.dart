@@ -37,6 +37,7 @@ class _VideoWorkspaceState extends State<VideoWorkspace> {
   VideoPlayerController? _controller;
   bool _muted = false;
   double _speed = 1;
+  int _lastItemsLength = -1;
 
   @override
   void initState() {
@@ -48,7 +49,7 @@ class _VideoWorkspaceState extends State<VideoWorkspace> {
   void didUpdateWidget(covariant VideoWorkspace oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.selectedIndex != oldWidget.selectedIndex ||
-        widget.items.length != oldWidget.items.length) {
+        widget.items.length != _lastItemsLength) {
       _loadVideo();
     }
   }
@@ -65,6 +66,8 @@ class _VideoWorkspaceState extends State<VideoWorkspace> {
       if (mounted) setState(() {});
       return;
     }
+
+    _lastItemsLength = widget.items.length;
 
     final path = widget.items[widget.selectedIndex].path;
     if (path.isEmpty) return;

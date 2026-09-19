@@ -44,6 +44,7 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
   final List<CanvasLayer> _layers = [];
 
   int _selectedLayer = -1;
+  int _lastItemsLength = -1;
 
   static const int _maxHistoryEntries = 80;
 
@@ -59,12 +60,15 @@ class _ImagesWorkspaceState extends State<ImagesWorkspace> {
   ) {
     super.didUpdateWidget(oldWidget);
 
-    if (widget.items.length != oldWidget.items.length) {
+    if (widget.items.length != _lastItemsLength ||
+        widget.selectedIndex != oldWidget.selectedIndex) {
       _syncLayers();
     }
   }
 
   void _syncLayers() {
+    _lastItemsLength = widget.items.length;
+
     if (_layers.isEmpty) {
       _layers.add(
         CanvasLayer(

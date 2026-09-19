@@ -23,6 +23,7 @@ enum TextAlignment {
 enum LayerType {
   image,
   text,
+  video,
 }
 
 class CanvasLayer {
@@ -30,6 +31,7 @@ class CanvasLayer {
   String name;
   final LayerType type;
   final Uint8List? bytes;
+  final String? path;
 
   String text;
 
@@ -59,6 +61,7 @@ class CanvasLayer {
     required this.name,
     required this.type,
     this.bytes,
+    this.path,
     this.text = '',
     this.fontFamily = 'Roboto',
     this.fontSize = 32,

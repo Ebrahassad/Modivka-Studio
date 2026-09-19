@@ -40,6 +40,7 @@ class _TextWorkspaceState extends State<TextWorkspace> {
 
   bool _wordWrap = true;
   bool _dirty = false;
+  int _lastItemsLength = -1;
 
   @override
   void initState() {
@@ -51,7 +52,7 @@ class _TextWorkspaceState extends State<TextWorkspace> {
   void didUpdateWidget(covariant TextWorkspace oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.selectedIndex != oldWidget.selectedIndex ||
-        widget.items.length != oldWidget.items.length) {
+        widget.items.length != _lastItemsLength) {
       _loadCurrent();
     }
   }
@@ -64,6 +65,8 @@ class _TextWorkspaceState extends State<TextWorkspace> {
       if (mounted) setState(() => _dirty = false);
       return;
     }
+
+    _lastItemsLength = widget.items.length;
 
     final item = widget.items[widget.selectedIndex];
     final content = item.path.isNotEmpty

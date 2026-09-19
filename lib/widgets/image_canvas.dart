@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 
 import '../core/models/canvas_layer.dart';
 import 'transform_handles.dart';
@@ -460,7 +462,7 @@ class _LayerWidget extends StatelessWidget {
   }
 }
 
-class _LayerContent extends StatelessWidget {
+class _LayerContent extends StatefulWidget {
   final CanvasLayer layer;
 
   const _LayerContent({
@@ -468,15 +470,78 @@ class _LayerContent extends StatelessWidget {
   });
 
   @override
+  State<_LayerContent> createState() => _LayerContentState();
+}
+
+class _LayerContentState extends State<_LayerContent> {
+  VideoPlayerController? _videoController;
+
+  @override
+  void initState() {
+    super.initState();
+    _initVideo();
+  }
+
+  @override
+  void didUpdateWidget(covariant _LayerContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.layer.id != widget.layer.id ||
+        oldWidget.layer.path != widget.layer.path ||
+        oldWidget.layer.type != widget.layer.type) {
+      _disposeVideo();
+      _initVideo();
+    }
+  }
+
+  Future<void> _initVideo() async {
+    final layer = widget.layer;
+
+    if (layer.type != LayerType.video ||
+        layer.path == null ||
+        layer.path!.isEmpty) {
+      return;
+    }
+
+    final controller = VideoPlayerController.file(File(layer.path!));
+
+    try {
+      await controller.initialize();
+      if (!mounted) {
+        await controller.dispose();
+        return;
+      }
+
+      controller.setLooping(true);
+
+      setState(() {
+        _videoController = controller;
+      });
+    } catch (_) {
+      await controller.dispose();
+    }
+  }
+
+  void _disposeVideo() {
+    final controller = _videoController;
+    _videoController = null;
+    controller?.dispose();
+  }
+
+  @override
+  void dispose() {
+    _disposeVideo();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final layer = widget.layer;
+
     if (layer.type == LayerType.text) {
       return Container(
         alignment: Alignment.center,
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(4),
-        ),
         child: Text(
           layer.text.isEmpty ? layer.name : layer.text,
           textAlign: switch (layer.textAlignment) {
@@ -496,6 +561,45 @@ class _LayerContent extends StatelessWidget {
               if (layer.underline) TextDecoration.underline,
               if (layer.strikethrough) TextDecoration.lineThrough,
             ]),
+          ),
+        ),
+      );
+    }
+
+    if (layer.type == LayerType.video) {
+      final controller = _videoController;
+
+      if (controller == null || !controller.value.isInitialized) {
+        return Container(
+          color: const Color(0xFF17191F),
+          alignment: Alignment.center,
+          child: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.video_library_outlined,
+                color: Colors.white54,
+                size: 48,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Loading video…',
+                style: TextStyle(color: Colors.white54),
+              ),
+            ],
+          ),
+        );
+      }
+
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(4),
+        child: FittedBox(
+          fit: BoxFit.contain,
+          clipBehavior: Clip.hardEdge,
+          child: SizedBox(
+            width: controller.value.size.width,
+            height: controller.value.size.height,
+            child: VideoPlayer(controller),
           ),
         ),
       );
