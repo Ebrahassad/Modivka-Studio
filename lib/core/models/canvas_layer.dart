@@ -55,6 +55,8 @@ class CanvasLayer {
 
   bool visible;
   bool locked;
+  bool flipHorizontal;
+  bool flipVertical;
 
   CanvasLayer({
     required this.id,
@@ -81,5 +83,7 @@ class CanvasLayer {
     this.opacity = 1,
     this.visible = true,
     this.locked = false,
+    this.flipHorizontal = false,
+    this.flipVertical = false,
   });
 }

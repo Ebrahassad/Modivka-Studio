@@ -36,11 +36,11 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
+      - name: Format Dart sources
+        run: dart format lib
+
       - name: Flutter analyze
         run: flutter analyze
-
-      - name: Dart format check
-        run: dart format --output=none --set-exit-if-changed lib
 
       - name: Git diff check
         run: git diff --check
